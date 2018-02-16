@@ -34,7 +34,7 @@ router.route('/questions/:class_id')
             class_id: class_id,
             question: req.body.question,
             subject_id: req.body.subject_id,
-            chapter_id: req.body.chapter_id,
+            lession_id: req.body.lession_id,
             answer: req.body.answer,
             school_id: school_id,
             status: status,
@@ -83,9 +83,11 @@ router.route('/questions/:class_id')
             });
         });
     })
-router.route('/questions/:subject_id/:class_id')
+    
+router.route('/questions/:subject_id/:class_id/:lession_id')
     .get(function (req, res, next) {
         var subject_id = req.params.subject_id;
+        var lession_id = req.params.lession_id;
         var class_id = req.params.class_id;
         var resultArray = [];
         mongo.connect(url, function (err, db) {
@@ -95,7 +97,8 @@ router.route('/questions/:subject_id/:class_id')
                 {
                     $match: {
                         subject_id: subject_id,
-                        class_id: class_id
+                        class_id: class_id,
+                        lession_id: lession_id
                     },
                 },
                 {
@@ -121,6 +124,17 @@ router.route('/questions/:subject_id/:class_id')
                     $unwind: "$subject_doc"
                 },
                 {
+                    $lookup: {
+                        from: "coursework",
+                        localField: "lession_id",
+                        foreignField: "lession_id",
+                        as: "chapter_doc"
+                    }
+                },
+                {
+                    $unwind: "$chapter_doc"
+                },
+                {
                     "$project": {
                         "_id": "$_id",
                         "class_Name": "$class_doc.name",
@@ -130,6 +144,7 @@ router.route('/questions/:subject_id/:class_id')
                         "options": "$options",
                         "question_id": "$question_id",
                         "class_id": "$class_id",
+                        "chapter": "$chapter_doc.title",
                         "subject_id": "$subject_id"
                     }
                 }

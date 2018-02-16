@@ -72,7 +72,7 @@ router.route('/students/:section_id')
                 return;
             }
             filesArray = req.files;
-            console.log(req.files);
+           // console.log(req.files);
             for (i = 0; i < filesArray.length; i++) {
 
                 filename = filesArray[i].filename;

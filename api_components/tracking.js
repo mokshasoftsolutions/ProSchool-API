@@ -52,12 +52,35 @@ router.route('/unZip/:school_id')
     .post(function (req, res, next) {
         uploadImage(req, res, function (err) {
             filename = req.files[0].filename;
+            var resultArray = [];
 
             var dirPath = __dirname + "/../uploads/" + filename;
             var destPath = __dirname + "/../";
-            var hema = fs.createReadStream(dirPath).pipe(unzip.Extract({ path: destPath }));
-            console.log(hema);
-            res.redirect('/');
+            //  var hema = fs.createReadStream(dirPath).pipe(unzip.Extract({ path: destPath }));
+            var hema = fs.createReadStream(dirPath)
+                .pipe(unzip.Parse())
+                .on('entry', function (entry) {
+                    fileName = entry.path;
+                    resultArray.push(fileName);
+                    var type = entry.type; // 'Directory' or 'File' 
+                   // console.log(fileName);
+                    var size = entry.size;
+                   // next(null, resultArray);
+                    // console.log(size);
+                    //  console.log(entry.filename);
+                     entry.pipe(fs.createWriteStream(destPath));
+                    // if (fileName === "this IS the file I'm looking for") {
+                    //     entry.pipe(fs.createWriteStream(destPath));
+                    // } else {
+                    //     entry.autodrain();
+                    // }
+                });
+            //  console.log(resultArray);
+            // var hema = fs.createReadStream(dirPath).pipe(unzip.on("extrcat"),function(){
+            //     console.log(files);
+            // });
+
+            res.send('hemu');
         });
     })
 
