@@ -63,12 +63,13 @@ router.route('/unZip/:school_id')
                     fileName = entry.path;
                     resultArray.push(fileName);
                     var type = entry.type; // 'Directory' or 'File' 
-                   // console.log(fileName);
+                    // console.log(fileName);
                     var size = entry.size;
-                   // next(null, resultArray);
+                    // next(null, resultArray);
                     // console.log(size);
                     //  console.log(entry.filename);
-                     entry.pipe(fs.createWriteStream(destPath));
+                    entry.autodrain();
+                    //  entry.pipe(fs.createWriteStream(destPath));
                     // if (fileName === "this IS the file I'm looking for") {
                     //     entry.pipe(fs.createWriteStream(destPath));
                     // } else {
