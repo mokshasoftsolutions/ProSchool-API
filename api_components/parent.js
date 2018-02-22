@@ -257,13 +257,13 @@ router.route('/all_classes/:select_date/:school_id')
                 //         "class_name": "$name",
                 //         "section_name": "$x1.name",
                 //         "status": "$x2.status",
-                        // "marks": "$marks",
-                        // "comment": "$comment",
-                        // "date": "$date",
-                        // "status": "$status",
-                        // "student_name": "$student_doc.first_name",
-                        // "roll_no": "$student_doc.roll_no",
-                        // "max_marks": "$exams_doc.max_marks",
+                // "marks": "$marks",
+                // "comment": "$comment",
+                // "date": "$date",
+                // "status": "$status",
+                // "student_name": "$student_doc.first_name",
+                // "roll_no": "$student_doc.roll_no",
+                // "max_marks": "$exams_doc.max_marks",
 
                 //     }
                 // }

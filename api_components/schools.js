@@ -8,9 +8,13 @@ var autoIncrement = require("mongodb-autoincrement");
 var assert = require('assert');
 var port = process.env.PORT || 4005;
 var router = express.Router();
+var async = require('async');
+var fs = require('fs');
+var waterfall = require('async-waterfall');
+var forEach = require('async-foreach').forEach;
 var multer = require('multer');
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
-// var mailer = require('nodemailer');
+var mailer = require('nodemailer');
 var schoolUserModule = require('../api_components/school_registration_user');
 var cookieParser = require('cookie-parser');
 router.use(function (req, res, next) {
@@ -23,13 +27,13 @@ router.use(function (req, res, next) {
 // Add Schools
 
 // Use Smtp Protocol to send Email
-// var smtpTransport = mailer.createTransport({
-//     service: "gmail",
-//     auth: {
-//         user: "basinahemababu91@gmail.com",
-//         pass: "Jaasmith@"
-//     }
-// });
+var smtpTransport = mailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: "mokshasoftsolutions@gmail.com",
+        pass: "Moksha99"
+    }
+});
 
 var storageImage = multer.diskStorage({ //multers disk storage settings
     destination: function (req, file, cb) {
@@ -295,8 +299,8 @@ router.route('/schools_photo_edit/:school_id')
             imagePath = req.file.path;
             mimetype = req.file.mimetype;
             // }
-         //   var filename = req.file.filename;
-         //   console.log(filename);
+            //   var filename = req.file.filename;
+            //   console.log(filename);
 
             mongo.connect(url, function (err, db) {
                 db.collection('schools').update(myquery, {
@@ -313,69 +317,367 @@ router.route('/schools_photo_edit/:school_id')
             });
         })
     });
-// db.getCollection('schools').update({"school_id":"SCH-9274"},{$set: ({SchoolImage: [ { filename: "HEMABABU.jpg"}]})});
 
-// router.route('/edit_school_management_details/:school_id')
-//     .put(function (req, res, next) {
-
-//         var myquery = { school_id: req.params.school_id };
-//         var req_founder = req.body.founder;
-//         var req_chairman = req.body.chairman;
-//         var req_principal = req.body.principal;
-//         var req_vice_principal = req.body.vice_principal;
-//         var req_coordinator = req.body.coordinator;
-
+// router.route('/Email_to_Teacher/:teacher_id/:school_id')
+//     .post(function (req, res, next) {
+//         var school_id = req.params.school_id;
+//         var teacherId = req.params.teacher_id;
+//         //  var teacher = req.body.teacher;
+//         //    teacherId = teacher_id.toUpperCase();
+//         teacher_id = teacherId.toLowerCase();
+//         var resultArray = resultArray2 = [];
 //         mongo.connect(url, function (err, db) {
-//             db.collection('schools').update(myquery, {
-//                 $set: {
-//                     founder: req_founder,
-//                     chairman: req_chairman,
-//                     principal: req_principal,
-//                     vice_principal: req_vice_principal,
-//                     coordinator: req_coordinator,
-//                 }
-//             }, function (err, result) {
+//             assert.equal(null, err);
+//             var cursor = db.collection('teachers').find({ teacher_id: teacherId });
+//             cursor.forEach(function (doc, err) {
 //                 assert.equal(null, err);
-//                 if (err) {
-//                     res.send('false');
-//                 }
-//                 db.close();
+//                 resultArray.push(doc);
+//             }, function () {
+
+//                 employeeId = resultArray[0].employee_id;
+//                 // console.log(employeeId);
+
+//                 mongo.connect(url, function (err, db) {
+//                     assert.equal(null, err);
+//                     var cursor = db.collection('employee').find({ employee_id: employeeId });
+//                     cursor.forEach(function (doc, err) {
+//                         assert.equal(null, err);
+//                         resultArray.push(doc);
+//                     }, function () {
+//                         //   console.log(resultArray);
+//                         email = resultArray[1].email;
+//                         // console.log(email);
+
+//                         var mail = {
+//                             from: "mokshasoftsolutions@gmail.com",
+//                             to: email,
+//                             subject: "Authentication fields for PROSchool ",
+//                             text: "email: " + teacher_id + "password : " + teacher_id,
+//                             html: "<b> Username :</b>" + teacher_id + "<br>" + "<b> Password : </b>" + teacher_id
+//                         }
+
+//                         smtpTransport.sendMail(mail, function (error, response) {
+//                             if (error) {
+//                                 //console.log(error);
+//                                 res.send('false');
+//                             } else {
+//                                 // console.log("Message sent: ");
+//                             }
+
+//                             smtpTransport.close();
+//                         });
+//                         db.close();
+
+//                     });
+//                 });
+
 //                 res.send('true');
 //             });
 //         });
+
 //     });
 
 
-// router.route('/edit_school_contact_details/:school_id')
-//     .put(function (req, res, next) {
+router.route('/Email_to_all_Teachers/:school_id')
+    .post(function (req, res, next) {
+        var resultArray = [];
+        var school_id = req.params.school_id;
+        var teachersResultArray = req.body.teachers;
 
-//         var myquery = { school_id: req.params.school_id };
-//         var req_website = req.body.website;
-//         var req_email = req.body.email;
-//         var req_phone = req.body.phone;
-//         var req_alternate_phone = req.body.alternate_phone;
-//         var req_address = req.body.address;
 
-//         mongo.connect(url, function (err, db) {
-//             db.collection('schools').update(myquery, {
-//                 $set: {
-//                     website: req_website,
-//                     email: req_email,
-//                     phone: req_phone,
-//                     alternate_phone: req_alternate_phone,
-//                     address: req_address,
-//                 }
-//             }, function (err, result) {
-//                 assert.equal(null, err);
-//                 if (err) {
-//                     res.send('false');
-//                 }
-//                 db.close();
-//                 res.send('true');
-//             });
-//         });
-//     });
+        mongo.connect(url, function (err, db) {
 
+            async.waterfall(
+                [
+
+                    function getSchoolEmployees(next) {
+                        //   console.log("getSchoolClassed");
+                        db.collection('teachers').find({
+                            school_id
+                        }).toArray(function (err, result) {
+                            if (err) {
+                                next(err, null);
+                            }
+                            next(null, result);
+                        });
+                    },
+                    function getEmployeeData(result, next) {
+                        //   console.log("getSectionsData");                      
+                        var count = 0;
+                        var teachersResult = result;
+                        var teachersResultLength = result.length;
+                        if (teachersResultLength == 0) {
+                            next(null, []);
+                        } else {
+                            //  console.log("In Second step sections")
+                            var teachersData = {};
+                            teachersResult.forEach(function (teachersData) {
+                                var employee_id = teachersData.employee_id;
+                                // console.log(class_id);
+                                db.collection('employee').find({
+                                    employee_id
+                                }).toArray(function (err, results) {
+                                    count++;
+                                    if (err) {
+                                        next(err, null);
+                                    }
+                                    teachersData.employee = results
+
+                                    if (teachersResultLength == count) {
+
+                                        next(null, teachersResult);
+                                        // next(null, classData);
+                                    }
+
+                                })
+                            })
+                        }
+                    }, function getemployeeData(result, next) {
+                        // console.log("getAttendanceData");
+                        //  console.log(attResult);
+                        //  console.log(result);
+                        var count = 0;
+
+                        var teachersResult = result;
+                        var teacherDataLength = result.length;
+                        //  console.log(classData.sections);
+                        if (teacherDataLength == 0) {
+                            next(null, []);
+                        } else {
+                            // console.log("In fourth step sections attendance")
+                            teachersResult.forEach(function (teacherData) {
+
+
+                                var sectionCount = 0;
+                                var teachersData = teacherData;
+                                var teacherId = teacherData.teacher_id;
+
+                                var employeeDataLength = teacherData.employee.length;
+                                var employee_id = teacherData.employee_id;
+                                //  var employeeEmail = teachersData.employee[0].email;
+                                if (employeeDataLength == 0) {
+                                    count++;
+                                    // console.log("count 0")
+                                } else {
+                                    //  console.log(teacherId);
+                                    //  console.log(employee_id);
+                                    //   console.log(teachersResultArray);
+                                    teachersResultArrayLength = teachersResultArray.length;
+
+                                    for (var i = 0; i < teachersResultArrayLength; i++) {
+
+                                        if (teachersResultArray[i].teacher_id == teacherId) {
+                                            Email = teachersData.employee[0].email;
+                                            //  console.log(teacherId);
+                                            //  console.log(Email);
+                                            // filepath = __dirname + '/../uploads/file-1512814699055.jpg';
+                                            var mail = {
+                                                from: "mokshasoftsolutions@gmail.com",
+                                                to: Email,
+                                                subject: "Authentication fields for PROSchool ",
+                                                text: "email: " + teacherId.toLowerCase() + "password : " + teacherId.toLowerCase(),
+                                                html: "<b> Username :</b>" + teacherId.toLowerCase() + "<br>" + "<b> Password : </b>" + teacherId.toLowerCase(),
+                                                // attachments: [{
+                                                //     filename: 'file-1512814699055.jpg',
+                                                //     streamSource: fs.createReadStream(filepath)
+                                                // }]
+                                            }
+
+                                            smtpTransport.sendMail(mail, function (error, response) {
+                                                if (error) {
+                                                    //console.log(error);
+                                                    // res.send('false');
+                                                } else {
+                                                    // console.log("Message sent: ");
+                                                }
+
+                                                smtpTransport.close();
+                                            });
+
+
+                                        }
+
+
+                                    }
+                                    count++;
+                                }
+
+                                if (teacherDataLength == count) {
+                                    next(null, 'classAttendence');
+                                }
+                            });
+                        }
+                    }
+                ],
+                function (err, result1) {
+
+                    db.close();
+                    if (err) {
+                        res.send({
+                            error: err
+                        });
+
+                    } else {
+
+                        res.send({
+                            students: result1
+                        });
+
+                    }
+                }
+            );
+        });
+    });
+
+router.route('/Email_to_all_Parents/:school_id')
+    .post(function (req, res, next) {
+        var resultArray = [];
+        var school_id = req.params.school_id;
+        var parentsResultArray = req.body.parents;
+
+
+        mongo.connect(url, function (err, db) {
+
+            async.waterfall(
+                [
+                    function getSchoolParents(next) {
+                        //   console.log("getSchoolClassed");
+                        db.collection('parents').find({
+                            school_id
+                        }).toArray(function (err, result) {
+                            if (err) {
+                                next(err, null);
+                            }
+                            next(null, result);
+                        });
+                    },
+                    function getParentsData(result, next) {
+
+                        var count = 0;
+                        var parentResult = result;
+                        var parentResultLength = result.length;
+                        if (parentResultLength == 0) {
+                            next(null, []);
+                        } else {
+
+                            parentResult.forEach(function (parentData) {
+                                //  console.log(parentsData);
+                                var student_id = parentData.students[0].student_id;
+                                // console.log(student_id);
+                                db.collection('students').find({
+                                    student_id
+                                }).toArray(function (err, results) {
+                                    count++;
+                                    if (err) {
+                                        next(err, null);
+                                    }
+                                    parentData.studentArray = results
+                                    // console.log(student_id);
+                                    // console.log(studentArray.students);
+                                    if (parentResultLength == count) {
+
+                                        next(null, parentResult);
+                                        // next(null, classData);
+                                    }
+
+                                })
+                            })
+                        }
+                    }, function getemployeeData(result, next) {
+                        // console.log("getAttendanceData");
+                        //   console.log(studentArray.students[0].father_email);
+                        //  console.log(result);
+                        var count = 0;
+
+                        var parentResult = result;
+                        var parentDataLength = result.length;
+                        //  console.log(classData.sections);
+                        if (parentDataLength == 0) {
+                            next(null, []);
+                        } else {
+                            // console.log("In fourth step sections attendance")
+                            parentResult.forEach(function (parentData) {
+
+                                var parentsData = parentData;
+                                var parentId = parentData.parent_id;
+
+                                var parentDataLength = parentData.studentArray.length;
+                                // var studentsArray2 = studentArray.students;
+                                // var student_id = parentData.students[0].student_id;
+                                //  var employeeEmail = teachersData.employee[0].email;
+                                if (parentDataLength == 0) {
+                                    count++;
+                                    // console.log("count 0")
+                                } else {
+                                    //  console.log(studentArray);
+                                    //  console.log(employee_id);
+                                    //   console.log(teachersResultArray);
+                                    parentsResultArrayLength = parentsResultArray.length;
+
+                                    for (var i = 0; i < parentsResultArrayLength; i++) {
+                                        //  console.log("hema");
+                                        if (parentsResultArray[i].parent_id == parentId) {
+                                            // console.log("babu");
+                                            //  console.log(parentsResultArray[i].parent_id);
+                                            if (parentData.studentArray[0].father_email) {
+                                                // console.log(studentArray);
+                                                Email = parentData.studentArray[0].father_email;
+                                                //  console.log(parentId);
+                                                //  console.log(Email);
+
+                                                var mail = {
+                                                    from: "mokshasoftsolutions@gmail.com",
+                                                    to: Email,
+                                                    subject: "Authentication fields of PROSchool ",
+                                                    text: "email: " + parentId.toLowerCase() + "password : " + parentId.toLowerCase(),
+                                                    html: "<b> Username :</b>" + parentId.toLowerCase() + "<br>" + "<b> Password : </b>" + parentId.toLowerCase()
+                                                }
+
+                                                smtpTransport.sendMail(mail, function (error, response) {
+                                                    if (error) {
+                                                        //console.log(error);
+                                                        // res.send('false');
+                                                    } else {
+                                                        // console.log("Message sent: ");
+                                                    }
+
+                                                    smtpTransport.close();
+                                                });
+
+                                            }
+                                        }
+
+
+                                    }
+                                    count++;
+                                }
+
+                                if (parentDataLength == count) {
+                                    next(null, 'classAttendence');
+                                }
+                            });
+                        }
+                    }
+                ],
+                function (err, result1) {
+
+                    db.close();
+                    if (err) {
+                        res.send({
+                            error: err
+                        });
+
+                    } else {
+
+                        res.send({
+                            students: result1
+                        });
+
+                    }
+                }
+            );
+        });
+    });
 
 
 module.exports = router;

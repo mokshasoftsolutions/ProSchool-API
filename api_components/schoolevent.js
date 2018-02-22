@@ -86,8 +86,26 @@ router.route('/schoolevents/:school_id')
             });
         });
     });
+router.route('/schooleventsByDate/:date/:school_id')
+    .get(function (req, res, next) {
+        var resultArray = [];
+        var school_id = req.params.school_id;
+        var date = req.params.date;
 
-
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('schoolevents').find({ school_id: school_id, date: date });
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    school_events: resultArray
+                });
+            });
+        });
+    });
 // Modified
 // Get SchoolEvents Details By school_event_Id
 
@@ -133,7 +151,7 @@ router.route('/edit_school_events/:school_event_id')
             });
         });
     });
-    
+
 // delete School Events
 
 router.route('/delete_school_events/:school_event_id')

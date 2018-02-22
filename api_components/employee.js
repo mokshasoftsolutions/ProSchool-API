@@ -11,6 +11,7 @@ var multer = require('multer');
 var teacherModule = require('../api_components/teacher_module');
 var xlstojson = require("xls-to-json-lc");
 var xlsxtojson = require("xlsx-to-json-lc");
+var forEach = require('async-foreach').forEach;
 var port = process.env.PORT || 4005;
 var router = express.Router();
 var fs = require('fs');
@@ -772,11 +773,21 @@ router.route('/delete_employee/:employee_id')
 //     });
 // });
 
-router.route('/employee_photo_edit/:employee_id')
+router.route('/employee_photo_edit/:employee_id/:filename')
     .post(function (req, res, next) {
         var status = 1;
 
         var myquery = { employee_id: req.params.employee_id };
+        var imagename = req.params.filename;
+        var filePath = __dirname + '/../uploads/' + imagename;
+
+        fs.access(filePath, error => {
+            if (!error) {
+                fs.unlinkSync(filePath);
+            } else {
+                console.log(error);
+            }
+        });
         uploadImage(req, res, function (err) {
             if (err) {
                 res.json({ error_code: 1, err_desc: err });
@@ -813,7 +824,7 @@ router.route('/employee_photo_edit/:employee_id')
     });
 
 
-module.exports = router;
+
 
 
 var storageImage = multer.diskStorage({ //multers disk storage settings
@@ -839,7 +850,7 @@ var uploadZip = multer({ //multer settings
 }).single('file');
 
 // Add Employee
-router.route('/multiple_images/:school_id')
+router.route('/multiple_images_zip/:school_id')
     .post(function (req, res, next) {
         var status = 1;
         var school_id = req.params.school_id;
@@ -865,3 +876,40 @@ router.route('/multiple_images/:school_id')
 
         });
     });
+
+
+router.route('/employee_delete_bulk/:school_id')
+    .post(function (req, res, next) {
+        var employees = req.body.employees;
+        var resultArray = [];
+        // console.log(students);
+        if (!req.body.employees) {
+            res.end('null');
+        } else {
+            var count = 0;
+            if (req.body.employees.length > 0) {
+                forEach(req.body.employees, function (key, value) {
+
+                    mongo.connect(url, function (err, db) {
+                        db.collection('employee').deleteOne({ employee_id: key.employee_id }, function (err, result) {
+                            assert.equal(null, err);
+                            if (err) {
+                                res.send('false');
+                            }
+
+                            count++;
+                            if (count == req.body.employees.length) {
+
+                                res.end('true');
+                            }
+
+                        });
+                    });
+                });
+            } else {
+                res.end('false');
+            }
+        }
+    });
+
+module.exports = router;

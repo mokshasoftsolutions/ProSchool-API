@@ -233,8 +233,9 @@ router.route('/student_tillDate_attendence/:student_id')
         var student_id = req.params.student_id;
         var resultArray = [];
         var present = 0, absent = 0, onLeave = 0;
+        var totalDays = totalAbsent = totalOnLeave = totalPresent = 0;
         var resultMonth, AttendenceMonth;
-        var studentAttendence = [];
+        var studentAttendence = noOfDays = [];
 
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
@@ -320,6 +321,10 @@ router.route('/student_tillDate_attendence/:student_id')
 
                     }
                     percent = present + absent + onLeave;
+                    totalAbsent += absent;
+                    totalOnLeave += onLeave;
+                    totalPresent += present;
+                    totalDays += percent;
                     prePercent = (100 * present) / percent;
                     // prePercent = Math.round(prePercent);
                     abPercent = (100 * absent) / percent;
@@ -337,7 +342,12 @@ router.route('/student_tillDate_attendence/:student_id')
                 }
                 db.close();
                 res.send({
-                    studentAttendence: studentAttendence
+                    totalDays: totalDays,
+                    totalAbsent: totalAbsent,
+                    totalOnLeave: totalOnLeave,
+                    totalPresent: totalPresent,
+                    studentAttendence: studentAttendence,
+
                 });
             });
         });

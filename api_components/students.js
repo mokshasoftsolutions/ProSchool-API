@@ -138,6 +138,8 @@ router.route('/students/:section_id')
                 academic_year: req.body.academic_year,
                 blood_group: req.body.blood_group,
                 bus_route_id: req.body.bus_route_id,
+                father_name: req.body.father_name,
+                father_email: req.body.father_email,
                 studentDocuments: '',
 
             };
@@ -181,6 +183,7 @@ router.route('/students/:section_id')
                 parent_address: req.body.gaurdian_address,
                 occupation: req.body.gaurdian_occupation
             };
+          
 
             mongo.connect(url, function (err, db) {
                 autoIncrement.getNextSequence(db, 'students', function (err, autoIndex) {
@@ -190,7 +193,7 @@ router.route('/students/:section_id')
                     }, {
                             unique: true
                         }, function (err, result) {
-                            if (item.section_id == null || item.dob == null || item.phone == null) {
+                            if (item.section_id == null || item.dob == "undefined" || item.phone == "undefined" || item.first_name == "undefined" || item.dob == null || item.father_name == "undefined" || item.phone == null) {
                                 res.end('null');
                             } else {
                                 collection.insertOne(item, function (err, result) {
@@ -256,10 +259,7 @@ router.route('/students/:section_id')
                                             // console.log("existing")
                                             parentModule.addStudentToParent(requestData);
                                         }
-
                                     }
-
-                                    // add parent
 
                                 });
                             }
@@ -676,6 +676,8 @@ router.route('/bulk_upload_students/:section_id')
                                 academic_year: key.academicyear,
                                 bus_route_id: key.busrouteid,
                                 blood_group: key.bloodgroup,
+                                father_name: key.fathername,
+                                father_email: key.fatheremail,
                                 status: status,
                             };
 
@@ -698,6 +700,7 @@ router.route('/bulk_upload_students/:section_id')
                             var parent_father = {
                                 parent_name: key.fathername,
                                 parent_contact: key.fathercontact,
+                                parent_email: key.fatheremail,
                                 parent_relation: 'father',
                                 parent_address: key.curaddress + ' ' + key.permcity + ' ' + key.permstate + ' ' + key.permpincode,
                                 occupation: key.fatheroccupation
@@ -705,6 +708,7 @@ router.route('/bulk_upload_students/:section_id')
                             var parent_mother = {
                                 parent_name: key.mothername,
                                 parent_contact: key.mothercontact,
+                                parent_email: key.motheremail,
                                 parent_relation: 'mother',
                                 parent_address: key.curaddress + ' ' + key.permcity + ' ' + key.permstate + ' ' + key.permpincode,
                                 occupation: key.motheroccupation
@@ -712,6 +716,7 @@ router.route('/bulk_upload_students/:section_id')
                             var parent_gaurdian = {
                                 parent_name: key.gaurdianname,
                                 parent_contact: key.gaurdiancontact,
+                                parent_email: key.gaurdianemail,
                                 parent_relation: key.gaurdianrelation,
                                 parent_address: key.gaurdianaddress,
                                 occupation: key.gaurdianoccupation
@@ -1007,7 +1012,7 @@ router.route('/edit_student_details/:student_id')
 
 router.route('/delete_student/:student_id')
     .delete(function (req, res, next) {
-        var resultArray = [];
+        var resultArray = resultArray2 = [];
         var files2 = [];
         var student_id = req.params.student_id;
         var myquery = { student_id: req.params.student_id };
@@ -1018,29 +1023,39 @@ router.route('/delete_student/:student_id')
                 resultArray.push(doc);
             }, function () {
                 db.close();
-                studentDocumentsLength = resultArray[0].studentDocuments.length;
+                if (resultArray[0].studentImage) {
 
-                files2.push({ filename: resultArray[0].studentImage[0].filename });
+                    if (resultArray[0].studentImage[0].filename != "student.jpg") {
+                        files2.push({ filename: resultArray[0].studentImage[0].filename });
+                    }
+                }
+                if (resultArray[0].studentDocuments) {
 
-                for (i = 0; i < studentDocumentsLength; i++) {
-                    files2.push({ filename: resultArray[0].studentDocuments[i].filename });
+                    studentDocumentsLength = resultArray[0].studentDocuments.length;
+
+
+                    for (i = 0; i < studentDocumentsLength; i++) {
+                        files2.push({ filename: resultArray[0].studentDocuments[i].filename });
+                    }
+
                 }
 
-                files2.forEach(function (doc, err) {
+                if (files2) {
+                    files2.forEach(function (doc, err) {
 
-                    filename = doc.filename;
-                    var filePath = __dirname + '/../uploads/' + filename;
-                    fs.access(filePath, error => {
-                        if (!error) {
-                            fs.unlinkSync(filePath, function (error) {
-                                console.log('hema');
-                            });
-                        } else {
-                            console.log(error);
-                        }
+                        filename = doc.filename;
+                        var filePath = __dirname + '/../uploads/' + filename;
+                        fs.access(filePath, error => {
+                            if (!error) {
+                                fs.unlinkSync(filePath, function (error) {
+                                    console.log('hema');
+                                });
+                            } else {
+                                console.log(error);
+                            }
+                        });
                     });
-                });
-
+                }
 
                 mongo.connect(url, function (err, db) {
                     db.collection('students').deleteOne(myquery, function (err, result) {
@@ -1065,16 +1080,7 @@ router.route('/delete_student/:student_id')
                                                 {
                                                     "$project":
                                                         {
-                                                            "parent_id": "$parent_id",
-                                                            "parent_name": "$parent_name",
-                                                            "students":
-                                                                {
-                                                                    "$map": {
-                                                                        "input": "$students",
-                                                                        "as": "students",
-                                                                        "in": { "length": { "$size": "$students" } }
-                                                                    }
-                                                                }
+                                                            "studentslength": { $size: "$students" }
                                                         }
                                                 }
                                             ]);
@@ -1082,7 +1088,9 @@ router.route('/delete_student/:student_id')
                                                 assert.equal(null, err);
                                                 resultArray.push(doc);
                                             }, function () {
-                                                length = resultArray.length;
+                                                // console.log(resultArray[1])
+                                                length = resultArray[1].studentslength;
+                                                //  console.log(length);
                                                 if (length != 0) {
 
                                                     //console.log(resultArray);
@@ -1153,12 +1161,22 @@ var EditImage = multer({ //multer settings
     }
 }).single('file');
 
-router.route('/student_photo_edit/:student_id')
+router.route('/student_photo_edit/:student_id/:filename')
     .post(function (req, res, next) {
         var status = 1;
 
         var myquery = { student_id: req.params.student_id };
-        // var myquery = { stations: { $elemMatch: { station_name: station_name, bus_route_id: bus_route_id } } };
+        var imagename = req.params.filename;
+        var filePath = __dirname + '/../uploads/' + imagename;
+
+        fs.access(filePath, error => {
+            if (!error) {
+                fs.unlinkSync(filePath);
+            } else {
+                console.log(error);
+            }
+        });
+
         EditImage(req, res, function (err) {
             if (err) {
                 res.json({ error_code: 1, err_desc: err });
@@ -1335,7 +1353,38 @@ router.route('/delete_student_Document_photo/:student_id/:name')
 
 
 
+router.route('/student_delete_bulk/:class_id/:section_id/:school_id')
+    .post(function (req, res, next) {
+        var students = req.body.students;
+        var resultArray = [];
+        // console.log(students);
+        if (!req.body.students) {
+            res.end('null');
+        } else {
+            var count = 0;
+            if (req.body.students.length > 0) {
+                forEach(req.body.students, function (key, value) {
 
+                    mongo.connect(url, function (err, db) {
+                        db.collection('students').deleteOne({ student_id: key.student_id }, function (err, result) {
+                            assert.equal(null, err);
+                            if (err) {
+                                res.send('false');
+                            }
+
+                            count++;
+                            if (count == req.body.students.length) {
+
+                                res.end('true');
+                            }
+                        });
+                    });
+                });
+            } else {
+                res.end('false');
+            }
+        }
+    });
 
 
 
