@@ -373,6 +373,7 @@ router.route('/marksbulk_eval/:exam_sch_id/:exam_paper_id/:section_id/:class_id'
                             var data = db.collection('exam_evaluation').find({
                                 section_id: section_id,
                                 exam_paper_id: exam_paper_id,
+                                exam_sch_id: exam_sch_id,
                                 student_id: item.student_id
                             }).count(function (e, triggerCount) {
 

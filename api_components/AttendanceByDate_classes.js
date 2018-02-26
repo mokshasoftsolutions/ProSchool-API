@@ -227,6 +227,156 @@ router.route('/all_cses_att_date_testing/:select_date/:school_id')
             );
         });
     });
+    
+router.route('/class_attendence_by_classId_for_android/:select_date/:class_id')
+    .get(function (req, res, next) {
+        var resultArray = [];
+        var class_id = req.params.class_id;
+        var splited = class_id.split("-");
+        var school_id = splited[0] + '-' + splited[1];
+        var select_date = new Date(req.params.select_date);
+        var endDate = new Date(select_date);
+        endDate.setDate(endDate.getDate() + 1)
+        var present = 0, absent = 0, onLeave = 0;
+        var count, dataCount;
+
+        var classAttendance = attendanceSection = [];
+
+        mongo.connect(url, function (err, db) {
+
+            async.waterfall(
+                [
+
+                    function getClassSections(next) {
+                        //   console.log("getSchoolClassed");
+                        db.collection('class_sections').find({
+                            class_id
+                        }).toArray(function (err, result) {
+                            if (err) {
+                                next(err, null);
+                            }
+                            next(null, result);
+                        });
+                    },
+                    function getsectionAttendenceData(result, next) {
+                        //   console.log("getSectionsData");                      
+                        var count = 0;
+                        var sectionResult = result;
+                        var sectionResultLength = result.length;
+                        if (sectionResultLength == 0) {
+                            next(null, []);
+                        } else {
+                            //  console.log("In Second step sections")
+                            sectionResult.forEach(function (sectionData) {
+                                var section_id = sectionData.section_id;
+                                // console.log(class_id);
+                                db.collection('attendance').find({
+                                    date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
+                                    section_id: section_id
+                                }).toArray(function (err, results) {
+                                    count++;
+                                    if (err) {
+                                        next(err, null);
+                                    }
+                                    sectionData.attendance = results
+
+                                    if (sectionResultLength == count) {
+
+                                        next(null, sectionResult);
+                                        // next(null, classData);
+                                    }
+
+                                })
+                            })
+                        }
+                    }, function getAttendanceData(result, next) {
+                        // console.log("getAttendanceData");
+                        //  console.log(attResult);
+                        //  console.log(result);
+                        var count = 0;
+
+                        var sectionResult = result;
+                        var sectionDataLength = result.length;
+                        //  console.log(sectionDataLength);
+                        if (sectionDataLength == 0) {
+                            next(null, []);
+                        } else {
+                            // console.log("In fourth step sections attendance")
+                            sectionResult.forEach(function (sectionData) {
+                                sectionAttendence = [];
+                                attendenceClass = [];
+
+                                var sectionsData = sectionData;
+
+                                var attendanceDataLength = sectionData.attendance.length;
+                                var section_id = sectionData.section_id;
+                                //   console.log(section_id);
+                                var sectionName = sectionData.name;
+                                preAtt = {};
+                                var present = absent = onLeave = percent = 0;
+                                if (attendanceDataLength == 0) {
+                                    count++;
+                                    // console.log("count 0")
+                                } else {
+
+                                    var sectionAttendence = sectionData.attendance;
+
+                                    // console.log(sectionAttendence);
+                                    var attendenceLength = sectionAttendence.length;
+                                    // console.log(classesLength);
+
+                                    preAtt = {};
+                                    var present = absent = onLeave = percent = 0;
+                                    for (i = 0; i < attendenceLength; i++) {
+                                        if (sectionAttendence[i].status == "Present") {
+                                            present += 1;
+                                        }
+                                        else if (sectionAttendence[i].status == "Absent") {
+                                            absent += 1;
+                                        }
+                                        else if (sectionAttendence[i].status == "On Leave") {
+                                            onLeave += 1;
+                                        }
+
+                                    }
+                                    count++;
+                                }
+                                percent = present + absent + onLeave;
+
+                                preAtt.present = present;
+                                preAtt.absent = absent;
+                                preAtt.onLeave = onLeave;
+
+                                attendanceSection.push({ "sectionName": sectionName, "sectionId": section_id, total: percent, "attendance": preAtt });
+
+                                // classAttendance.push(attendanceSection);
+
+                                if (sectionDataLength == count) {
+                                    next(null, attendanceSection);
+                                }
+                            });
+                        }
+                    }
+                ],
+                function (err, result1) {
+
+                    db.close();
+                    if (err) {
+                        res.send({
+                            error: err
+                        });
+
+                    } else {
+
+                        res.send({
+                            students: result1
+                        });
+
+                    }
+                }
+            );
+        });
+    });
 
 router.route('/student_tillDate_attendence/:student_id')
     .get(function (req, res, next) {
@@ -281,10 +431,14 @@ router.route('/student_tillDate_attendence/:student_id')
                 {
                     $project:
                         {
-                            Name: "$student_doc.first_name",
+                            name: "$student_doc.first_name",
+                            lastName: "$student_doc.last_name",
+                            admissionNo: "$student_doc.admission_no",
+                            rollNo: "$student_doc.roll_no",
                             className: "$class_doc.name",
                             sectionName: "$section_doc.name",
                             status: "$status",
+                            gender: "$student_doc.gender",
                             month: { $month: "$date" },
                             date: "$date"
                         }
@@ -298,6 +452,12 @@ router.route('/student_tillDate_attendence/:student_id')
                 monthArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
                 monthString = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
                 // console.log(attendanceArray[0]);
+                studentName = resultArray[0].name + " " + resultArray[0].lastName;
+                admissionNo = resultArray[0].admissionNo;
+                rollNo = resultArray[0].rollNo;
+                className = resultArray[0].className;
+                sectionName = resultArray[0].sectionName;
+                gender = resultArray[0].gender;
                 for (i = 0; i < monthArray.length; i++) {
                     monthValue = monthArray[i];
                     monthName = monthString[i];
@@ -347,6 +507,12 @@ router.route('/student_tillDate_attendence/:student_id')
                     totalOnLeave: totalOnLeave,
                     totalPresent: totalPresent,
                     studentAttendence: studentAttendence,
+                    className: className,
+                    sectionName: sectionName,
+                    admissionNo: admissionNo,
+                    rollNo: rollNo,
+                    studentName: studentName,
+                    gender: gender
 
                 });
             });
@@ -773,6 +939,7 @@ router.route('/section_monthly_attendence/:select_month/:section_id')
                                 var attendenceCount = 0;
                                 var studentName = studentData.first_name;
                                 var studentId = studentData.student_id;
+                                var studentImage = studentData.studentImage[0].filename;
 
                                 studentAttendence = studentData.attendance;
                                 //  console.log(student_id);
@@ -808,7 +975,7 @@ router.route('/section_monthly_attendence/:select_month/:section_id')
                                 monthAttendence.presentPercent = prePercent + "%";
                                 monthAttendence.absentPercent = abPercent + "%";
                                 monthAttendence.onLeavePercent = onPercent + "%";
-                                studentAttendenceReport.push({ "Name": studentName, "studentId": studentId, "month": monthValue, "count": percent, "attendance": monthAttendence })
+                                studentAttendenceReport.push({ "Name": studentName, "studentId": studentId, image: studentImage, "month": monthValue, "count": percent, "attendance": monthAttendence })
 
                                 count++;
 

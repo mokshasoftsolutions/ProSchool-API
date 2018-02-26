@@ -129,7 +129,6 @@ router.route('/upload_books/:school_id')
                                                         res.end('true');
                                                     }
 
-
                                                 });
                                             }
                                         });

@@ -80,7 +80,7 @@ router.route('/class_sections/:class_id')
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('class_sections').find({ class_id: class_id });
+            var cursor = db.collection('class_sections').find({ class_id: class_id }).sort({name:1});
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);

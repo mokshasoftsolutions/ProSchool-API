@@ -183,7 +183,7 @@ router.route('/students/:section_id')
                 parent_address: req.body.gaurdian_address,
                 occupation: req.body.gaurdian_occupation
             };
-          
+
 
             mongo.connect(url, function (err, db) {
                 autoIncrement.getNextSequence(db, 'students', function (err, autoIndex) {
@@ -193,7 +193,7 @@ router.route('/students/:section_id')
                     }, {
                             unique: true
                         }, function (err, result) {
-                            if (item.section_id == null || item.dob == "undefined" || item.phone == "undefined" || item.first_name == "undefined" || item.dob == null || item.father_name == "undefined" || item.phone == null) {
+                            if (item.section_id == null || item.dob == "undefined" || item.phone == "undefined" || item.first_name == "undefined" || current_address.cur_address == "undefined" || permanent_address.perm_address == "undefined" || item.dob == null || item.father_name == "undefined" || item.phone == null) {
                                 res.end('null');
                             } else {
                                 collection.insertOne(item, function (err, result) {
@@ -1089,41 +1089,43 @@ router.route('/delete_student/:student_id')
                                                 resultArray.push(doc);
                                             }, function () {
                                                 // console.log(resultArray[1])
-                                                length = resultArray[1].studentslength;
-                                                //  console.log(length);
-                                                if (length != 0) {
+                                                if (resultArray[1].studentslength) {
+                                                    length = resultArray[1].studentslength;
+                                                    //  console.log(length);
+                                                    if (length != 0) {
 
-                                                    //console.log(resultArray);
-                                                    // length = resultArray[0].students.length;
-                                                    parentId = resultArray[0].parent_id;
-                                                    // console.log(parentId);
-                                                    if (length > 1) {
-                                                        mongo.connect(url, function (err, db) {
-                                                            db.collection('parents').update({ "students": { $elemMatch: { "student_id": student_id } } },
-                                                                { $pull: { "students": { "student_id": student_id } } })
-                                                            assert.equal(null, err);
-                                                            if (err) {
-                                                                res.send('false');
-                                                            }
-                                                        });
-                                                    }
-                                                    else if (length == 1) {
-                                                        mongo.connect(url, function (err, db) {
-                                                            db.collection('parents').deleteOne({ "students": { $elemMatch: { "student_id": student_id } } })
-                                                            assert.equal(null, err);
-                                                            if (err) {
-                                                                res.send('false');
-                                                            }
-                                                            else {
-                                                                mongo.connect(loginUrl, function (err, db) {
-                                                                    db.collection('users').deleteOne({ uniqueId: parentId })
-                                                                    assert.equal(null, err);
-                                                                    if (err) {
-                                                                        res.send('false');
-                                                                    }
-                                                                });
-                                                            }
-                                                        });
+                                                        //console.log(resultArray);
+                                                        // length = resultArray[0].students.length;
+                                                        parentId = resultArray[0].parent_id;
+                                                        // console.log(parentId);
+                                                        if (length > 1) {
+                                                            mongo.connect(url, function (err, db) {
+                                                                db.collection('parents').update({ "students": { $elemMatch: { "student_id": student_id } } },
+                                                                    { $pull: { "students": { "student_id": student_id } } })
+                                                                assert.equal(null, err);
+                                                                if (err) {
+                                                                    res.send('false');
+                                                                }
+                                                            });
+                                                        }
+                                                        else if (length == 1) {
+                                                            mongo.connect(url, function (err, db) {
+                                                                db.collection('parents').deleteOne({ "students": { $elemMatch: { "student_id": student_id } } })
+                                                                assert.equal(null, err);
+                                                                if (err) {
+                                                                    res.send('false');
+                                                                }
+                                                                else {
+                                                                    mongo.connect(loginUrl, function (err, db) {
+                                                                        db.collection('users').deleteOne({ uniqueId: parentId })
+                                                                        assert.equal(null, err);
+                                                                        if (err) {
+                                                                            res.send('false');
+                                                                        }
+                                                                    });
+                                                                }
+                                                            });
+                                                        }
                                                     }
                                                 }
                                                 db.close();
@@ -1167,15 +1169,18 @@ router.route('/student_photo_edit/:student_id/:filename')
 
         var myquery = { student_id: req.params.student_id };
         var imagename = req.params.filename;
-        var filePath = __dirname + '/../uploads/' + imagename;
 
-        fs.access(filePath, error => {
-            if (!error) {
-                fs.unlinkSync(filePath);
-            } else {
-                console.log(error);
-            }
-        });
+        if (imagename != "student.jpg") {
+
+            var filePath = __dirname + '/../uploads/' + imagename;
+            fs.access(filePath, error => {
+                if (!error) {
+                    fs.unlinkSync(filePath);
+                } else {
+                    console.log(error);
+                }
+            });
+        }
 
         EditImage(req, res, function (err) {
             if (err) {

@@ -28,7 +28,7 @@ router.route('/questions/:class_id')
         var splited = class_id.split("-");
         var school_id = splited[0] + '-' + splited[1];
 
-        var options = [req.body.option1, req.body.option2, req.body.option3, req.body.option4];
+        //  var options = [req.body.option1, req.body.option2, req.body.option3, req.body.option4];
         var item = {
             question_id: 'getauto',
             class_id: class_id,
@@ -39,12 +39,14 @@ router.route('/questions/:class_id')
             school_id: school_id,
             status: status,
         };
-        // options = {
-        //     option_1: req.body.option1,
-        //     option_2: req.body.option2,
-        //     option_3: req.body.option3,
-        //     option_4: req.body.option4
-        // }
+        //  console.log(item.question);
+        // console.log(typeof(item.answer));
+        options = {
+            option_1: req.body.option1,
+            option_2: req.body.option2,
+            option_3: req.body.option3,
+            option_4: req.body.option4
+        }
         mongo.connect(url, function (err, db) {
             autoIncrement.getNextSequence(db, 'questions', function (err, autoIndex) {
                 var collection = db.collection('questions');
@@ -53,8 +55,8 @@ router.route('/questions/:class_id')
                 }, {
                         unique: true
                     }, function (err, result) {
-                        if (item.answer == null || item.question == null || item.subject_id == null) {
-                            res.end('null');
+                        if (item.answer == null || item.answer == "" || item.question == null || item.question == "" || options == "undefined" || item.answer == "undefined" || item.question == "undefined" || item.subject_id == null) {
+                            res.end('false');
                         } else {
                             collection.insertOne(item, function (err, result) {
                                 if (err) {
@@ -83,7 +85,7 @@ router.route('/questions/:class_id')
             });
         });
     })
-    
+
 router.route('/questions/:subject_id/:class_id/:lession_id')
     .get(function (req, res, next) {
         var subject_id = req.params.subject_id;
@@ -140,6 +142,7 @@ router.route('/questions/:subject_id/:class_id/:lession_id')
                         "class_Name": "$class_doc.name",
                         "subject_name": "$subject_doc.name",
                         "question": "$question",
+                        "lession_id": "$lession_id",
                         "answer": "$answer",
                         "options": "$options",
                         "question_id": "$question_id",
@@ -258,6 +261,58 @@ router.route('/delete_quizz/:quizz_id')
         var myquery = { quizz_id: req.params.quizz_id };
         mongo.connect(url, function (err, db) {
             db.collection('quizz').deleteOne(myquery, function (err, result) {
+                assert.equal(null, err);
+                if (err) {
+                    res.send('false');
+                }
+                db.close();
+                res.send('true');
+            });
+        });
+    });
+
+
+
+router.route('/edit_question/:question_id')
+    .put(function (req, res, next) {
+        var myquery = { question_id: req.params.question_id };
+        var question = req.body.question;
+        var answer = req.body.answer;
+
+        // var options = {
+        option1 = req.body.option1;
+        option2 = req.body.option2;
+        option3 = req.body.option3;
+        option4 = req.body.option4;
+        // }
+
+        mongo.connect(url, function (err, db) {
+            db.collection('questions').update(myquery, {
+                $set: {
+                    question: question,
+                    answer: answer,
+                    options: [{ option_1: option1, option_2: option2, option_3: option3, option_4: option4 }]
+                }
+                // $push: {
+                //     options
+                // }
+            }, function (err, result) {
+                assert.equal(null, err);
+                if (err) {
+                    res.send('false');
+                }
+                db.close();
+                res.send('true');
+            });
+        });
+    });
+
+
+router.route('/delete_question/:question_id')
+    .delete(function (req, res, next) {
+        var myquery = { question_id: req.params.question_id };
+        mongo.connect(url, function (err, db) {
+            db.collection('questions').deleteOne(myquery, function (err, result) {
                 assert.equal(null, err);
                 if (err) {
                     res.send('false');

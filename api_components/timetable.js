@@ -287,7 +287,7 @@ router.route('/classes_timetable_by_day/:select_day/:class_id')
                         }
                     }
                 },
-            ])
+            ]).sort({section_name:1})
 
 
             cursor.forEach(function (doc, err) {
@@ -301,6 +301,243 @@ router.route('/classes_timetable_by_day/:select_day/:class_id')
             });
         });
     });
+
+
+router.route('/section_timetable_by_sectionId_for_android/:section_id')
+    .get(function (req, res, next) {
+        var resultArray = [];
+        var section_id = req.params.section_id;
+        var splited = section_id.split("-");
+        var school_id = splited[0] + '-' + splited[1];
+        var Day = ['sunday', 'monday', 'tuesday', 'wednesday', 'thrusday', 'friday', 'saturday'];
+        // var day = req.params.select_day;
+        //  day = Day[day - 1];
+        var dayTimetable = sectionTimetable = sessionTimings = [];
+
+        mongo.connect(url, function (err, db) {
+
+            async.waterfall(
+                [
+                    function getClassSections(next) {
+                        //   console.log("getSchoolClassed");
+                        db.collection('class_sections').find({
+                            section_id
+                        }).toArray(function (err, result) {
+                            if (err) {
+                                next(err, null);
+                            }
+                            next(null, result);
+                        });
+                    },
+                    function getSectionsData(result, next) {
+                        //   console.log("getSectionsData");                      
+                        var count = 0;
+                        var sectionResult = result;
+                        var sectionResultLength = result.length;
+                        if (sectionResultLength == 0) {
+                            next(null, []);
+                        } else {
+                            //  console.log("In Second step sections")
+                            sectionResult.forEach(function (sectionData) {
+                                var section_id = sectionData.section_id;
+                                // console.log(class_id);
+                                db.collection('timetable').aggregate([
+                                    {
+                                        $match: {
+                                            section_id: section_id,
+                                        }
+                                    },
+                                    {
+                                        $lookup: {
+                                            from: "class_sections",
+                                            localField: "section_id",
+                                            foreignField: "section_id",
+                                            as: "section_doc"
+                                        }
+                                    },
+                                    {
+                                        $unwind: "$section_doc"
+                                    },
+                                    // {
+                                    //     $lookup: {
+                                    //         from: "school_classes",
+                                    //         localField: "class_id",
+                                    //         foreignField: "class_id",
+                                    //         as: "class_doc"
+                                    //     }
+                                    // },
+                                    // {
+                                    //     $unwind: "$class_doc"
+                                    // },
+                                    {
+                                        $lookup: {
+                                            from: "subjects",
+                                            localField: "subject_id",
+                                            foreignField: "subject_id",
+                                            as: "subject_doc"
+                                        }
+                                    },
+                                    {
+                                        $unwind: "$subject_doc"
+                                    },
+                                    {
+                                        $group: {
+                                            _id: '$_id',
+                                            // class_name: {
+                                            //     "$first": "$class_doc.name"
+                                            // },
+                                            section_name: {
+                                                "$first": "$section_doc.name"
+                                            },
+                                            // section_id: {
+                                            //     "$first": "$section_doc.section_id"
+                                            // },
+                                            section_id: {
+                                                "$first": "$section_doc.section_id"
+                                            },
+                                            // class_id: {
+                                            //     "$first": "$class_doc.class_id"
+                                            // },
+                                            day: {
+                                                "$first": "$day"
+                                            },
+                                            subject_name: {
+                                                "$first": "$subject_doc.name"
+                                            },
+                                            start_time: {
+                                                "$first": "$start_time"
+                                            },
+                                            end_time: {
+                                                "$first": "$end_time"
+                                            }
+                                        }
+                                    },
+                                ]).toArray(function (err, results) {
+                                    count++;
+                                    if (err) {
+                                        next(err, null);
+                                    }
+                                    sectionData.timetable = results
+
+                                    if (sectionResultLength == count) {
+
+                                        next(null, sectionResult);
+                                        // next(null, classData);
+                                    }
+
+                                })
+                            })
+                        }
+                    },
+                    function getsessionTimings(result, next) {
+                        //   console.log("getTotalSchoolAttendance");
+                        // console.log(result);                        
+                        var data = db.collection('session_timings').find({
+                            school_id: school_id
+                        }).sort({ start_time: 1 }).toArray(function (err, sessionResult) {
+                            if (err) {
+                                next(err, null);
+                            }
+                            next(null, result, sessionResult);
+                        });
+                    }, function getAttendanceData(result, sessionResult, next) {
+
+                        //  console.log(sessionResult);
+                        var count = 0;
+                        sessionTimings = sessionResult;
+                        var sectionResult = result;
+                        var sectionDataLength = result.length;
+                      //  console.log(sectionDataLength + "hema");
+                        if (sectionDataLength == 0) {
+                            next(null, []);
+                        } else {
+
+                            sectionResult.forEach(function (sectionData) {
+
+                                // attendenceClass = [];
+                              //  console.log("babu");
+                                var sectionCount = 0;
+                                var sectionsData = sectionData;
+                                var timetableData = [];
+                                var timetableDataLength = sectionData.timetable.length;
+                                var section_id = sectionData.section_id;
+                                //console.log(section_id);
+                                //   console.log(sectionData.timetable);
+                                var sectionName = sectionData.name;
+
+
+                                var timetable = sectionData.timetable;
+                                // console.log(timetable);
+                                var timetableLength = timetable.length;
+
+                                dayLength = Day.length;
+
+                                for (i = 0; i < dayLength; i++) {
+                                    presentDay = Day[i];
+                                    //   console.log("babu2");
+                                    timetableData = [];
+                                    for (j = 0; j < sessionTimings.length; j++) {
+
+                                        var startTime = endTime = subject = "";
+                                        var presentTime = sessionTimings[j].start_time;
+                                        //  console.log("babu3");
+                                        for (k = 0; k < timetableLength; k++) {
+                                            if (presentDay == timetable[k].day) {
+
+                                                if (sessionTimings[j].start_time == timetable[k].start_time) {
+                                                    //      console.log("babu4");
+                                                    startTime = timetable[k].start_time;
+                                                    endTime = timetable[k].end_time;
+                                                    subject = timetable[k].subject_name;
+
+                                                }
+
+                                            }
+                                        }
+                                        if (subject == "") {
+                                            startTime = sessionTimings[j].start_time;
+                                            endTime = sessionTimings[j].end_time;
+                                            subject = "";
+                                        }
+                                        timetableData.push({ start_time: startTime, end_time: endTime, subject: subject })
+
+                                    }
+                                    dayTimetable.push({ day: presentDay, timetableData })
+
+                                }
+
+                                // sectionTimetable.push({ dayTimetable });
+
+                                count++;
+                                //  console.log(count+"nara");
+
+                                if (sectionDataLength == count) {
+                                    next(null, dayTimetable);
+                                }
+                            });
+                        }
+                    }
+                ],
+                function (err, result1) {
+
+                    db.close();
+                    if (err) {
+                        res.send({
+                            error: err
+                        });
+
+                    } else {
+
+                        res.send({
+                            timetable: result1
+                        });
+
+                    }
+                }
+            );
+        });
+    });
+
 
 
 router.route('/day_timetable_by_classId/:select_day/:class_id')
@@ -318,7 +555,7 @@ router.route('/day_timetable_by_classId/:select_day/:class_id')
 
             async.waterfall(
                 [
-                    function getClassSections(next) {
+                    function getSection(next) {
                         //   console.log("getSchoolClassed");
                         db.collection('class_sections').find({
                             class_id
@@ -329,7 +566,7 @@ router.route('/day_timetable_by_classId/:select_day/:class_id')
                             next(null, result);
                         });
                     },
-                    function getSectionsData(result, next) {
+                    function getSectionsTimetableData(result, next) {
                         //   console.log("getSectionsData");                      
                         var count = 0;
                         var sectionResult = result;
@@ -441,7 +678,7 @@ router.route('/day_timetable_by_classId/:select_day/:class_id')
                             }
                             next(null, result, sessionResult);
                         });
-                    }, function getAttendanceData(result, sessionResult, next) {
+                    }, function getTimetableData(result, sessionResult, next) {
 
                         //  console.log(sessionResult);
                         var count = 0;
@@ -492,7 +729,7 @@ router.route('/day_timetable_by_classId/:select_day/:class_id')
                                         endTime = sessionTimings[j].end_time;
                                         subject = "";
                                     }
-                                    
+
                                     timetableData.push({ start_time: startTime, end_time: endTime, subject: subject })
                                 }
 

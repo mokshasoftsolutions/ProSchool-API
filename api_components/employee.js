@@ -779,15 +779,17 @@ router.route('/employee_photo_edit/:employee_id/:filename')
 
         var myquery = { employee_id: req.params.employee_id };
         var imagename = req.params.filename;
-        var filePath = __dirname + '/../uploads/' + imagename;
+        if (imagename != "student.jpg") {
+            var filePath = __dirname + '/../uploads/' + imagename;
 
-        fs.access(filePath, error => {
-            if (!error) {
-                fs.unlinkSync(filePath);
-            } else {
-                console.log(error);
-            }
-        });
+            fs.access(filePath, error => {
+                if (!error) {
+                    fs.unlinkSync(filePath);
+                } else {
+                    console.log(error);
+                }
+            });
+        }
         uploadImage(req, res, function (err) {
             if (err) {
                 res.json({ error_code: 1, err_desc: err });

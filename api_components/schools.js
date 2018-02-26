@@ -34,6 +34,13 @@ var smtpTransport = mailer.createTransport({
         pass: "Moksha99"
     }
 });
+// var smtpTransportMail = mailer.createTransport({
+//     service: "gmail",
+//     auth: {
+//         user: "support.proschool@mokshasoftsolutions.in",
+//         pass: "moksha99"
+//     }
+// });
 
 var storageImage = multer.diskStorage({ //multers disk storage settings
     destination: function (req, file, cb) {
@@ -103,23 +110,23 @@ router.route('/schools')
                 status: status,
             };
             var username = req.body.email;
-            // var mail = {
-            //     from: "basinahemababu91@gmail.com",
-            //     to: username,
-            //     subject: "Authentication fields for PROSchool ",
-            //     text: "email: " + username + "password : " + username,
-            //     html: "<b> Username :</b>" + username + "<br>" + "<b> Password : </b>" + username
-            // }
+            var mail = {
+                from: "mokshasoftsolutions@gmail.com",
+                to: "info.proschool@mokshasoftsolutions.in",
+                subject: "Registration of " + req.body.name + " with PROSchool - Reg.",
+                text: "email: " + username + "password : " + username,
+                html: "<b> Username :</b>" + username + "<br>" + "<b> Password : </b>" + username
+            }
 
-            // smtpTransport.sendMail(mail, function (error, response) {
-            //     if (error) {
-            //         console.log(error);
-            //     } else {
-            //         console.log("Message sent: ");
-            //     }
+            smtpTransport.sendMail(mail, function (error, response) {
+                if (error) {
+                    console.log(error);
+                } else {
+                   // console.log("Message sent: ");
+                }
 
-            //     smtpTransport.close();
-            // });
+                smtpTransport.close();
+            });
             mongo.connect(url, function (err, db) {
                 autoIncrement.getNextSequence(db, 'schools', function (err, autoIndex) {
                     var collection = db.collection('schools');
