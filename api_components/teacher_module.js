@@ -52,12 +52,12 @@ teacherModule.prototype.teacher = function (teachers_account,res,next) {
                                 //   item.teacher_id = school_id + '-TCH-' + autoIndex;
                                 collection.insertOne(item, function (err, result) {
                                     if (err) {
-                                        console.log(err);
+                                      //  console.log(err);
                                         if (err.code == 11000) {
 
-                                            res.end('false');
+                                           // res.end('false');
                                         }
-                                        res.end('false');
+                                      //  res.end('false');
                                     }
                                     collection.update({
                                         _id: item._id

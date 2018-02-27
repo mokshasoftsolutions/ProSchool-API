@@ -1065,71 +1065,101 @@ router.route('/delete_student/:student_id')
                         }
                         else {
                             mongo.connect(url, function (err, db) {
-                                db.collection('attendance').deleteMany(myquery, function (err, result) {
+                                db.collection('student_fee').deleteMany(myquery, function (err, result) {
                                     assert.equal(null, err);
                                     if (err) {
                                         res.send('false');
                                     }
                                     else {
                                         mongo.connect(url, function (err, db) {
-                                            assert.equal(null, err);
-                                            var cursor = db.collection('parents').aggregate([
-                                                {
-                                                    $match: { "students": { $elemMatch: { "student_id": student_id } } }
-                                                },
-                                                {
-                                                    "$project":
-                                                        {
-                                                            "studentslength": { $size: "$students" }
-                                                        }
-                                                }
-                                            ]);
-                                            cursor.forEach(function (doc, err) {
+                                            db.collection('assignment_marks').deleteMany(myquery, function (err, result) {
                                                 assert.equal(null, err);
-                                                resultArray.push(doc);
-                                            }, function () {
-                                                // console.log(resultArray[1])
-                                                if (resultArray[1].studentslength) {
-                                                    length = resultArray[1].studentslength;
-                                                    //  console.log(length);
-                                                    if (length != 0) {
-
-                                                        //console.log(resultArray);
-                                                        // length = resultArray[0].students.length;
-                                                        parentId = resultArray[0].parent_id;
-                                                        // console.log(parentId);
-                                                        if (length > 1) {
-                                                            mongo.connect(url, function (err, db) {
-                                                                db.collection('parents').update({ "students": { $elemMatch: { "student_id": student_id } } },
-                                                                    { $pull: { "students": { "student_id": student_id } } })
-                                                                assert.equal(null, err);
-                                                                if (err) {
-                                                                    res.send('false');
-                                                                }
-                                                            });
-                                                        }
-                                                        else if (length == 1) {
-                                                            mongo.connect(url, function (err, db) {
-                                                                db.collection('parents').deleteOne({ "students": { $elemMatch: { "student_id": student_id } } })
-                                                                assert.equal(null, err);
-                                                                if (err) {
-                                                                    res.send('false');
-                                                                }
-                                                                else {
-                                                                    mongo.connect(loginUrl, function (err, db) {
-                                                                        db.collection('users').deleteOne({ uniqueId: parentId })
+                                                if (err) {
+                                                    res.send('false');
+                                                }
+                                                else {
+                                                    mongo.connect(url, function (err, db) {
+                                                        db.collection('exam_evaluation').deleteMany(myquery, function (err, result) {
+                                                            assert.equal(null, err);
+                                                            if (err) {
+                                                                res.send('false');
+                                                            }
+                                                            else {
+                                                                mongo.connect(url, function (err, db) {
+                                                                    db.collection('attendance').deleteMany(myquery, function (err, result) {
                                                                         assert.equal(null, err);
                                                                         if (err) {
                                                                             res.send('false');
                                                                         }
+                                                                        else {
+                                                                            mongo.connect(url, function (err, db) {
+                                                                                assert.equal(null, err);
+                                                                                var cursor = db.collection('parents').aggregate([
+                                                                                    {
+                                                                                        $match: { "students": { $elemMatch: { "student_id": student_id } } }
+                                                                                    },
+                                                                                    {
+                                                                                        "$project":
+                                                                                            {
+                                                                                                "studentslength": { $size: "$students" }
+                                                                                            }
+                                                                                    }
+                                                                                ]);
+                                                                                cursor.forEach(function (doc, err) {
+                                                                                    assert.equal(null, err);
+                                                                                    resultArray.push(doc);
+                                                                                }, function () {
+                                                                                    // console.log(resultArray[1])
+                                                                                    if (resultArray[1].studentslength) {
+                                                                                        length = resultArray[1].studentslength;
+                                                                                        //  console.log(length);
+                                                                                        if (length != 0) {
+
+                                                                                            //console.log(resultArray);
+                                                                                            // length = resultArray[0].students.length;
+                                                                                            parentId = resultArray[0].parent_id;
+                                                                                            // console.log(parentId);
+                                                                                            if (length > 1) {
+                                                                                                mongo.connect(url, function (err, db) {
+                                                                                                    db.collection('parents').update({ "students": { $elemMatch: { "student_id": student_id } } },
+                                                                                                        { $pull: { "students": { "student_id": student_id } } })
+                                                                                                    assert.equal(null, err);
+                                                                                                    if (err) {
+                                                                                                        res.send('false');
+                                                                                                    }
+                                                                                                });
+                                                                                            }
+                                                                                            else if (length == 1) {
+                                                                                                mongo.connect(url, function (err, db) {
+                                                                                                    db.collection('parents').deleteOne({ "students": { $elemMatch: { "student_id": student_id } } })
+                                                                                                    assert.equal(null, err);
+                                                                                                    if (err) {
+                                                                                                        res.send('false');
+                                                                                                    }
+                                                                                                    else {
+                                                                                                        mongo.connect(loginUrl, function (err, db) {
+                                                                                                            db.collection('users').deleteOne({ uniqueId: parentId })
+                                                                                                            assert.equal(null, err);
+                                                                                                            if (err) {
+                                                                                                                res.send('false');
+                                                                                                            }
+                                                                                                        });
+                                                                                                    }
+                                                                                                });
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                    db.close();
+                                                                                    res.send('true');
+                                                                                });
+                                                                            });
+                                                                        }
                                                                     });
-                                                                }
-                                                            });
-                                                        }
-                                                    }
+                                                                });
+                                                            }
+                                                        });
+                                                    });
                                                 }
-                                                db.close();
-                                                res.send('true');
                                             });
                                         });
                                     }
