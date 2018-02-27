@@ -444,7 +444,8 @@ router.route('/fee_by_Date/:select_date/:school_id')
                         current_date: {
                             $gte: new Date(select_date.toISOString()),
                             $lt: new Date(endDate.toISOString())
-                        }
+                        },
+                        school_id: school_id
                     },
                 },
                 {
@@ -1010,11 +1011,11 @@ router.route('/school_fee_details_for_dashboard/:date/:school_id')
                         var count = 0;
 
                         /* student Total Fee Paid Details */
-
+                        studentFeePaid = 0;
                         if (studentFeeResult != 0) {
                             var studentFeeLength = studentFeeResult.length;
                             // console.log(studentFeeResult);
-                            studentFeePaid = 0;
+
                             for (a = 0; a < studentFeeLength; a++) {
 
                                 if (studentFeeResult[a].fee_paid) {
@@ -1036,7 +1037,7 @@ router.route('/school_fee_details_for_dashboard/:date/:school_id')
                                 }
                             }
                         }
-                  //      console.log(todayfeePaid);
+                        //      console.log(todayfeePaid);
 
                         /* Yesterday Total Fee Details */
 
@@ -1047,7 +1048,7 @@ router.route('/school_fee_details_for_dashboard/:date/:school_id')
                                 }
                             }
                         }
-                     //   console.log(dayBefore);
+                        //   console.log(dayBefore);
 
                         /*  Total Fee Collection Before today */
 
@@ -1058,7 +1059,7 @@ router.route('/school_fee_details_for_dashboard/:date/:school_id')
                                 }
                             }
                         }
-                      //  console.log(dayBeforeTotalCollection);
+                        //  console.log(dayBeforeTotalCollection);
 
 
                         /* Last Week Total Fee Details */
@@ -1070,7 +1071,7 @@ router.route('/school_fee_details_for_dashboard/:date/:school_id')
                                 }
                             }
                         }
-                       // console.log(lastWeek);
+                        // console.log(lastWeek);
 
                         /*  Total Fee Collection Before Last Week */
 
@@ -1081,7 +1082,7 @@ router.route('/school_fee_details_for_dashboard/:date/:school_id')
                                 }
                             }
                         }
-                      //  console.log(lastWeekTotalCollection);
+                        //  console.log(lastWeekTotalCollection);
 
                         // var classResult = classResult;
                         var classDataLength = classResult.length;
