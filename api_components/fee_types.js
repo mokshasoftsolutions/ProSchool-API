@@ -43,7 +43,7 @@ router.route('/fee_types/:school_id')
                 }, {
                         unique: true
                     }, function (err, result) {
-                        if (item.fee_type == null || item.fee_category == null) {
+                        if (item.fee_type == null || item.fee_category == null || item.fee_type == "undefined" || item.fee_category == "undefined" || item.fee_type == "" || item.fee_category == "") {
                             res.end('null');
                         } else {
                             collection.insertOne(item, function (err, result) {
@@ -118,7 +118,7 @@ router.route('/fee_master/:school_id')
                 }, {
                         unique: true
                     }, function (err, result) {
-                        if (item.fee_types_id == null || item.fee_amount == null || item.fee_amount == "" || item.due_date == "undefined" || item.due_date == "" || item.fee_amount == "undefined") {
+                        if (item.fee_types_id == null || item.fee_amount == null || item.fee_amount == "" || item.fee_types_id == "undefined" || item.fee_types_id == "" || item.fee_amount == "undefined") {
                             res.end('null');
                         } else {
                             collection.insertOne(item, function (err, result) {
@@ -324,7 +324,7 @@ router.route('/fee_collection/:student_id')
                 }, {
                         unique: true
                     }, function (err, result) {
-                        if (item.fee_types_id == null || item.student_id == null) {
+                        if (item.fee_types_id == null || item.student_id == null || item.fee_types_id == "" || item.fee_paid == ""|| item.student_id == "" || item.fee_paid == "undefined"  || item.fee_types_id == "undefined") {
                             res.end('null');
                         } else {
                             collection.insertOne(item, function (err, result) {

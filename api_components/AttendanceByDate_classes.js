@@ -1092,6 +1092,7 @@ router.route('/employee_monthly_attendence/:select_month/:school_id')
                                 var attendenceCount = 0;
                                 var employeeName = employeeData.first_name;
                                 var employeeId = employeeData.employee_id;
+                                var employeeImageName = employeeData.employeeImage[0].filename;
 
                                 employeeAttendence = employeeData.attendance;
                                 //  console.log(student_id);
@@ -1127,7 +1128,7 @@ router.route('/employee_monthly_attendence/:select_month/:school_id')
                                 monthAttendence.presentPercent = prePercent + "%";
                                 monthAttendence.absentPercent = abPercent + "%";
                                 monthAttendence.onLeavePercent = onPercent + "%";
-                                employeeAttendenceReport.push({ "Name": employeeName, "employeeId": employeeId, "month": monthValue, "count": percent, "attendance": monthAttendence })
+                                employeeAttendenceReport.push({ "Name": employeeName, "employeeId": employeeId,employeeImage:employeeImageName, "month": monthValue, "count": percent, "attendance": monthAttendence })
 
                                 count++;
 

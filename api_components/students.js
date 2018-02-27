@@ -678,6 +678,7 @@ router.route('/bulk_upload_students/:section_id')
                                 blood_group: key.bloodgroup,
                                 father_name: key.fathername,
                                 father_email: key.fatheremail,
+                                studentDocuments: '',
                                 status: status,
                             };
 
@@ -1254,6 +1255,7 @@ router.route('/student_Document_photo_edit/:student_id/:imagename')
     .post(function (req, res, next) {
         var status = 1;
         var imagename = req.params.imagename;
+        var student_id = req.params.student_id;
         var myquery = { student_id: req.params.student_id };
         //  var myquery = { student_id: req.params.student_id, studentDocuments: { $elemMatch: { filename: imagename } } };
         var filePath = __dirname + '/../uploads/' + imagename;
@@ -1277,14 +1279,23 @@ router.route('/student_Document_photo_edit/:student_id/:imagename')
                 res.json({ error_code: 1, err_desc: "No file passed" });
                 return;
             }
-            // var SchoolImage = {
+
             filename = req.file.filename;
             originalname = req.file.originalname;
             imagePath = req.file.path;
             mimetype = req.file.mimetype;
             splitedImage = originalname.split(".");
             originalname = splitedImage[0];
-            // }
+
+            // mongo.connect(url, function (err, db) {
+            //     db.collection('students').findAndModify({
+            //         query: { "student_id": student_id },
+            //         update: { "$set": { "studentDocuments.$[elem].filename": filename, "studentDocuments.$[elem].originalname": originalname } },
+            //         arrayFilters: [{ "elem.filename": imagename }]
+            //     })
+            // })
+
+
             //   var filename = req.file.filename;
             //   console.log(filename);
 
