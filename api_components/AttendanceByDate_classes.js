@@ -60,7 +60,7 @@ router.route('/all_cses_att_date_testing/:select_date/:school_id')
                         });
                     },
                     function getSectionsData(result, next) {
-                        //   console.log("getSectionsData");                      
+                        //    console.log(result);                      
                         var count = 0;
                         var classResult = result;
                         var classResultLength = result.length;
@@ -92,7 +92,7 @@ router.route('/all_cses_att_date_testing/:select_date/:school_id')
                     },
                     function getTotalSchoolAttendance(result, next) {
                         //   console.log("getTotalSchoolAttendance");
-                        // console.log(result);                        
+                        //   console.log(result);                        
                         var data = db.collection('attendance').find({
                             date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
                             school_id: school_id
@@ -104,7 +104,21 @@ router.route('/all_cses_att_date_testing/:select_date/:school_id')
                             // console.log(attResult);
                             next(null, result, attResult);
                         });
-                    }, function getAttendanceData(result, attResult, next) {
+                    },
+                    function getTotalSchoolAttendance(result, attResult, next) {
+                        //   console.log("getTotalSchoolAttendance");
+                        //   console.log(result);                        
+                        var data = db.collection('class_sections').find({
+                            school_id: school_id
+                        }).toArray(function (err, sectionsResult) {
+                            if (err) {
+                                next(err, null);
+                            }
+                            // console.log("total attenance result")
+                            // console.log(attResult);
+                            next(null, result, attResult, sectionsResult);
+                        });
+                    }, function getAttendanceData(result, attResult, sectionsResult, next) {
                         // console.log("getAttendanceData");
                         //  console.log(attResult);
                         //  console.log(result);
@@ -117,94 +131,100 @@ router.route('/all_cses_att_date_testing/:select_date/:school_id')
                             next(null, []);
                         } else {
                             // console.log("In fourth step sections attendance")
-                            classResult.forEach(function (classData) {
-                                classSections = [];
-                                attendenceClass = [];
+                            if (sectionsResult.length == 0) {
+                                next(null, 'nosections');
+                            }
+                            else {
+                                classResult.forEach(function (classData) {
+                                    classSections = [];
+                                    attendenceClass = [];
 
-                                var sectionCount = 0;
-                                var classesData = classData;
+                                    var sectionCount = 0;
+                                    var classesData = classData;
 
-                                var sectionDataLength = classData.sections.length;
-                                var class_id = classData.class_id;
-                                var className = classData.name;
-                                if (sectionDataLength == 0) {
-                                    count++;
-                                    // console.log("count 0")
-                                } else {
+                                    var sectionDataLength = classData.sections.length;
+                                    //  console.log(classData.sections.length);
+                                    var class_id = classData.class_id;
+                                    var className = classData.name;
+                                    if (sectionDataLength == 0) {
+                                        count++;
+                                        // console.log("count 0")
+                                    } else {
 
-                                    var classes = classData.sections;
-                                    // console.log(typeof (classes));
-                                    var classesLength = classes.length;
-                                    // console.log(classesLength);
-                                    attendenceSection = [];
-                                    sectionAttendence = [];
-                                    for (var i = 0; i <= classesLength; i++) {
-                                        preAtt = {};
+                                        var classes = classData.sections;
+                                        // console.log(typeof (classes));
+                                        var classesLength = classes.length;
+                                        // console.log(classesLength);
                                         attendenceSection = [];
-                                        if (classes[i] != undefined) {
-                                            classSections.push(classes[i]);
-                                            if (classSections[i] != undefined) {
-                                                var sectionId = classSections[i].section_id;
-                                                var sectionName = classSections[i].name;
+                                        sectionAttendence = [];
+                                        for (var i = 0; i <= classesLength; i++) {
+                                            preAtt = {};
+                                            attendenceSection = [];
+                                            if (classes[i] != undefined) {
+                                                classSections.push(classes[i]);
+                                                if (classSections[i] != undefined) {
+                                                    var sectionId = classSections[i].section_id;
+                                                    var sectionName = classSections[i].name;
 
-                                                var attLength = attResult.length;
-                                                var present = absent = onLeave = percent = 0;
-                                                var prePercent = abPercent = onPercent = 0;
-                                                for (var k = 0; k <= attLength; k++) {
-                                                    attendanceArray.push(attResult[k]);
-                                                    if (attendanceArray[k] != undefined) {
-                                                        attSectionId = attendanceArray[k].section_id;
-                                                        //  console.log(attSectionId);
-                                                        if (sectionId == attSectionId) {
-                                                            var status = attendanceArray[k].status;
-                                                            //  console.log(status);
-                                                            if (status == "Present") {
-                                                                present += 1;
-                                                            }
-                                                            else if (status == "Absent") {
-                                                                absent += 1;
-                                                            }
-                                                            else if (status == "On Leave") {
-                                                                onLeave += 1;
+                                                    var attLength = attResult.length;
+                                                    var present = absent = onLeave = percent = 0;
+                                                    var prePercent = abPercent = onPercent = 0;
+                                                    for (var k = 0; k <= attLength; k++) {
+                                                        attendanceArray.push(attResult[k]);
+                                                        if (attendanceArray[k] != undefined) {
+                                                            attSectionId = attendanceArray[k].section_id;
+                                                            //  console.log(attSectionId);
+                                                            if (sectionId == attSectionId) {
+                                                                var status = attendanceArray[k].status;
+                                                                //  console.log(status);
+                                                                if (status == "Present") {
+                                                                    present += 1;
+                                                                }
+                                                                else if (status == "Absent") {
+                                                                    absent += 1;
+                                                                }
+                                                                else if (status == "On Leave") {
+                                                                    onLeave += 1;
+                                                                }
                                                             }
                                                         }
                                                     }
+                                                    percent = present + absent + onLeave;
+                                                    prePercent = (100 * present) / percent;
+                                                    // prePercent = Math.round(prePercent);
+                                                    abPercent = (100 * absent) / percent;
+                                                    // abPercent = Math.round(abPercent);
+                                                    onPercent = (100 * onLeave) / percent;
+                                                    // onPercent = Math.round(onPercent);
+                                                    //  console.log(prePercent);
+                                                    preAtt.present = present;
+                                                    preAtt.absent = absent;
+                                                    preAtt.onLeave = onLeave;
+                                                    preAtt.presentPercent = prePercent + "%";
+                                                    preAtt.absentPercent = abPercent + "%";
+                                                    preAtt.onLeavePercent = onPercent + "%";
                                                 }
-                                                percent = present + absent + onLeave;
-                                                prePercent = (100 * present) / percent;
-                                                // prePercent = Math.round(prePercent);
-                                                abPercent = (100 * absent) / percent;
-                                                // abPercent = Math.round(abPercent);
-                                                onPercent = (100 * onLeave) / percent;
-                                                // onPercent = Math.round(onPercent);
-                                                //  console.log(prePercent);
-                                                preAtt.present = present;
-                                                preAtt.absent = absent;
-                                                preAtt.onLeave = onLeave;
-                                                preAtt.presentPercent = prePercent + "%";
-                                                preAtt.absentPercent = abPercent + "%";
-                                                preAtt.onLeavePercent = onPercent + "%";
+
+                                                attendenceSection.push({ "sectionName": sectionName, "sectionId": sectionId, "attendance": preAtt });
+
+                                                sectionAttendence.push(attendenceSection);
+
                                             }
-
-                                            attendenceSection.push({ "sectionName": sectionName, "sectionId": sectionId, "attendance": preAtt });
-
-                                            sectionAttendence.push(attendenceSection);
-
                                         }
+                                        count++;
                                     }
-                                    count++;
-                                }
 
-                                attendenceClass.push({ "classId": class_id, "className": className, "sections": sectionAttendence });
+                                    attendenceClass.push({ "classId": class_id, "className": className, "sections": sectionAttendence });
 
-                                //  attendenceClass.push({"sections":sectionAttendence});
+                                    //  attendenceClass.push({"sections":sectionAttendence});
 
-                                classAttendence.push(attendenceClass);
+                                    classAttendence.push(attendenceClass);
 
-                                if (classDataLength == count) {
-                                    next(null, classAttendence);
-                                }
-                            });
+                                    if (classDataLength == count) {
+                                        next(null, classAttendence);
+                                    }
+                                });
+                            }
                         }
                     }
                 ],
@@ -227,7 +247,7 @@ router.route('/all_cses_att_date_testing/:select_date/:school_id')
             );
         });
     });
-    
+
 router.route('/class_attendence_by_classId_for_android/:select_date/:class_id')
     .get(function (req, res, next) {
         var resultArray = [];
@@ -1128,7 +1148,7 @@ router.route('/employee_monthly_attendence/:select_month/:school_id')
                                 monthAttendence.presentPercent = prePercent + "%";
                                 monthAttendence.absentPercent = abPercent + "%";
                                 monthAttendence.onLeavePercent = onPercent + "%";
-                                employeeAttendenceReport.push({ "Name": employeeName, "employeeId": employeeId,employeeImage:employeeImageName, "month": monthValue, "count": percent, "attendance": monthAttendence })
+                                employeeAttendenceReport.push({ "Name": employeeName, "employeeId": employeeId, employeeImage: employeeImageName, "month": monthValue, "count": percent, "attendance": monthAttendence })
 
                                 count++;
 

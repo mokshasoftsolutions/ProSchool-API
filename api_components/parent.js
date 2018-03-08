@@ -83,7 +83,7 @@ router.route('/get_parents_by_section_id/:section_id')
                         as: "student_doc"
                     }
                 },
-            ]);
+             ]);
 
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);

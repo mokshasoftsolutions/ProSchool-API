@@ -122,9 +122,10 @@ teacherModule.prototype.teacher = function (teachers_account,res,next) {
             // }
         });
 
-    } else {
-        res.end('false');
-    }
+     }
+    // else {
+    //   //  res.end('false');
+    // }
 
 
 }

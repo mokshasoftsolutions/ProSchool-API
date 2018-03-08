@@ -510,7 +510,7 @@ router.route('/Email_to_all_Teachers/:school_id')
                                 }
 
                                 if (teacherDataLength == count) {
-                                    next(null, 'classAttendence');
+                                    next(null, 'true');
                                 }
                             });
                         }
@@ -660,7 +660,7 @@ router.route('/Email_to_all_Parents/:school_id')
                                 }
 
                                 if (parentDataLength == count) {
-                                    next(null, 'classAttendence');
+                                    next(null, 'true');
                                 }
                             });
                         }

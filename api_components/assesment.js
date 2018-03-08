@@ -35,11 +35,11 @@ router.route('/education_rate/:student_id')
             autoIncrement.getNextSequence(db, 'education_rating', function(err, autoIndex) {
                 var collection = db.collection('education_rating');
                 collection.ensureIndex({
-                    "student_id": 1,
+                    "education_rate_id": 1,
                 }, {
                     unique: true
                 }, function(err, result) {
-                    if (item.school_id == null || item.employee_id == null || subjects.subject_id == null) {
+                    if (item.student_id == null) {
                         res.end('null');
                     } else {
                         collection.insertOne(item, function(err, result) {
@@ -53,7 +53,7 @@ router.route('/education_rate/:student_id')
                                 _id: item._id
                             }, {
                                 $set: {
-                                    student_id: student_id+'EDU-RATE-'+autoIndex
+                                    education_rate_id: 'EDU-RATE-'+autoIndex
                                 },
                                 $push: {
                                   subjects

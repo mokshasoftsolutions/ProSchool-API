@@ -373,6 +373,39 @@ router.route('/delete_material_out/:material_out_id')
     });
 
 
+router.route('/send_express_mail/:school_id')
+    .post(function (req, res, next) {
+        var myquery = { school_id: req.params.school_id };
+        var app = require('express')();
+        var mailer = require('express-mailer');
+
+        mailer.extend(app, {
+            from: "mokshasoftsolutions@gmail.com",
+            host: 'basinahemababu21@gmail.com', // hostname 
+            html: "hemababu",
+            secureConnection: true, // use SSL 
+            port: 465, // port for secure SMTP 
+            transportMethod: 'SMTP', // default is SMTP. Accepts anything that nodemailer accepts 
+            auth: {
+                user: "mokshasoftsolutions@gmail.com",
+                pass: "Moksha99"
+            }
+        });
+        res.send('true');
+
+        // mongo.connect(url, function (err, db) {
+        //     db.collection('material_in').deleteOne(myquery, function (err, result) {
+        //         assert.equal(null, err);
+        //         if (err) {
+        //             res.send('false');
+        //         }
+        //         db.close();
+        //         res.send('true');
+        //     });
+        // });
+    });
+
+
 
 
 module.exports = router;

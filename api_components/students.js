@@ -1433,6 +1433,34 @@ router.route('/student_delete_bulk/:class_id/:section_id/:school_id')
     });
 
 
+router.route('/edit_student_parent_details/:student_id')
+    .put(function (req, res, next) {
+        var myquery = { student_id: req.params.student_id };
+        var name = req.body.name;
+        var contact = req.body.contact;
+        var parent_name = req.body.parent_name;
+
+        mongo.connect(url, function (err, db) {
+            // db.collection('students').update(myquery, {
+            //     $set: {
+            //         event_title: name,
+            //     }
+            // }, 
+            db.collection('students').findAndModify({
+                query: myquery,
+                update: { "$set": { "parents.$[elem].parent_name": name, "parents.$[elem].contact": contact } },
+                arrayFilters: [{ "elem.parent_name": parent_name }]
+            },
+                function (err, result) {
+                    assert.equal(null, err);
+                    if (err) {
+                        res.send('false');
+                    }
+                    db.close();
+                    res.send('true');
+                });
+        });
+    });
 
 
 

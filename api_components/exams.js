@@ -354,8 +354,7 @@ router.route('/marksbulk_eval/:exam_sch_id/:exam_paper_id/:section_id/:class_id'
             var count = 0;
             if (req.body.studentsMarks.length > 0) {
                 forEach(req.body.studentsMarks, function (key, value) {
-
-
+                    
                     var item = {
                         paper_result_id: '',
                         student_id: key.student_id,
