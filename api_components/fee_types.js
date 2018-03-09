@@ -1060,7 +1060,7 @@ router.route('/school_fee_details_for_dashboard/:date/:school_id')
                             },
                             {
                                 $lookup: {
-                                    from: "feetypes",
+                                    from: "fee_type",
                                     localField: "fee_types_id",
                                     foreignField: "fee_types_id",
                                     as: "fee_doc"
@@ -1087,15 +1087,12 @@ router.route('/school_fee_details_for_dashboard/:date/:school_id')
                                     "student_id": "$student_id",
                                     "fee_types_id": "$fee_types_id",
                                     "fee_type": "$fee_doc.fee_type",
-                                    // "totalFee": "$feeMaster_doc.fee_amount",
                                     "payment_mode": "$payment_mode",
                                     "discount": "$discount",
                                     "fine": "$fine",
                                     "current_date": "$current_date",
-                                    // "due_date": "$feeMaster_doc.due_date",
                                     "fee_paid": "$fee_paid",
-                                    "fee_category": "$feetype.fee_category",
-                                    // "fee_amount": "$feemaster.fee_amount",
+                                    "total_fee": "$total_fee",
                                 }
                             }
                         ]).toArray(function (err, todayFeeResult) {
@@ -1121,7 +1118,7 @@ router.route('/school_fee_details_for_dashboard/:date/:school_id')
                             },
                             {
                                 $lookup: {
-                                    from: "feetypes",
+                                    from: "fee_type",
                                     localField: "fee_types_id",
                                     foreignField: "fee_types_id",
                                     as: "fee_doc"
@@ -1148,15 +1145,12 @@ router.route('/school_fee_details_for_dashboard/:date/:school_id')
                                     "student_id": "$student_id",
                                     "fee_types_id": "$fee_types_id",
                                     "fee_type": "$fee_doc.fee_type",
-                                    // "totalFee": "$feeMaster_doc.fee_amount",
                                     "payment_mode": "$payment_mode",
                                     "discount": "$discount",
                                     "fine": "$fine",
                                     "current_date": "$current_date",
-                                    // "due_date": "$feeMaster_doc.due_date",
                                     "fee_paid": "$fee_paid",
-                                    "fee_category": "$feetype.fee_category",
-                                    // "fee_amount": "$feemaster.fee_amount",
+                                    "total_fee": "$total_fee",
                                 }
                             }
                         ]).toArray(function (err, yesterdayFeeResult) {
@@ -1199,7 +1193,7 @@ router.route('/school_fee_details_for_dashboard/:date/:school_id')
                             },
                             {
                                 $lookup: {
-                                    from: "feetypes",
+                                    from: "fee_type",
                                     localField: "fee_types_id",
                                     foreignField: "fee_types_id",
                                     as: "fee_doc"
@@ -1226,15 +1220,12 @@ router.route('/school_fee_details_for_dashboard/:date/:school_id')
                                     "student_id": "$student_id",
                                     "fee_types_id": "$fee_types_id",
                                     "fee_type": "$fee_doc.fee_type",
-                                    // "totalFee": "$feeMaster_doc.fee_amount",
                                     "payment_mode": "$payment_mode",
                                     "discount": "$discount",
                                     "fine": "$fine",
                                     "current_date": "$current_date",
-                                    // "due_date": "$feeMaster_doc.due_date",
                                     "fee_paid": "$fee_paid",
-                                    "fee_category": "$feetype.fee_category",
-                                    // "fee_amount": "$feemaster.fee_amount",
+                                    "total_fee": "$total_fee",
                                 }
                             }
                         ]).toArray(function (err, lastWeekFeeResult) {
@@ -1600,6 +1591,41 @@ router.route('/edit_fee_terms/:fee_term_id')
         });
     });
 
+router.route('/delete_fee_terms/:fee_term_id')
+    .delete(function (req, res, next) {
+        var myquery = { fee_term_id: req.params.fee_term_id };
+
+        mongo.connect(url, function (err, db) {
+            db.collection('fee_term').deleteOne(myquery, function (err, result) {
+                assert.equal(null, err);
+                if (err) {
+                    res.send('false');
+                }
+                else {
+                    mongo.connect(url, function (err, db) {
+                        db.collection('fee_master').deleteMany(myquery, function (err, result) {
+                            assert.equal(null, err);
+                            if (err) {
+                                res.send('false');
+                            }
+                            else {
+                                mongo.connect(url, function (err, db) {
+                                    db.collection('student_fee').deleteMany(myquery, function (err, result) {
+                                        assert.equal(null, err);
+                                        if (err) {
+                                            res.send('false');
+                                        }
+                                    });
+                                });
+                            }
+                        });
+                    });
+                }
+                db.close();
+                res.send('true');
+            });
+        });
+    });
 
 // Edit for Fee Collection
 
@@ -1607,14 +1633,11 @@ router.route('/edit_fee_master/:fee_master_id')
     .put(function (req, res, next) {
         var myquery = { fee_master_id: req.params.fee_master_id };
         var req_fee_amount = req.body.fee_amount;
-        var req_fee_type = req.body.fee_type;
-
 
         mongo.connect(url, function (err, db) {
             db.collection('fee_master').update(myquery, {
                 $set: {
                     fee_amount: req_fee_amount,
-                    fee_type: req_fee_type,
                 }
             }, function (err, result) {
                 assert.equal(null, err);

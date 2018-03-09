@@ -306,12 +306,6 @@ router.route('/students/:section_id')
                 }
 
             ]).sort({ roll_no: 1 })
-            // .forEach(function(doc) {
-            //     db.collection.update(
-            //        { _id: doc._id },
-            //        { $set: { roll_no: parseInt(doc.roll_no) } }
-            //     );
-            // });
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
@@ -739,7 +733,7 @@ router.route('/bulk_upload_students/:section_id')
                                     }, {
                                             unique: true
                                         }, function (err, result) {
-                                            if (item.section_id == null || item.phone == null) {
+                                            if (item.section_id == null || item.phone == null || item.dob == null || item.dob == null || item.dob == "undefined" || item.admission_no == null || item.admission_no == "" || item.admission_no == "undefined" || item.gender == null || item.gender == "" || item.gender == "undefined") {
                                                 res.end('null');
                                             } else {
                                                 item.student_id = class_id + '-STD-' + autoIndex;

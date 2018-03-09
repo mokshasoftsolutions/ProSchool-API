@@ -127,7 +127,7 @@ router.route('/employee/:school_id')
                     }, {
                             unique: true
                         }, function (err, result) {
-                            if (item.first_name == null || item.dob == null || item.phone == null || item.job_category == null) {
+                            if (item.first_name == null || item.dob == null || item.phone == null || item.job_category == null || item.dob == "" || item.phone == "" || item.job_category == "" || item.dob == "undefined" || item.phone == "undefined" || item.job_category == "undefined") {
                                 res.end('null');
                             } else {
                                 collection.insertOne(item, function (err, result) {
@@ -441,7 +441,7 @@ router.route('/bulk_upload_employees/:school_id')
                                 dob: key.dob,
                                 gender: key.gender,
                                 qualification: key.qualification,
-                                job_category: key.toLower(jobcategory),
+                                job_category: key.jobcategory,
                                 experience: key.experience,
                                 phone: key.phone,
                                 email: key.email,
@@ -506,7 +506,7 @@ router.route('/bulk_upload_employees/:school_id')
                                             }, {
                                                     unique: true
                                                 }, function (err, result) {
-                                                    if (item.school_id == null || item.dob == null) {
+                                                    if (item.school_id == null || item.dob == null || item.dob == "" || item.dob == "undefined" || item.job_category == null || item.job_category == "" || item.job_category == "undefined" || item.phone == null || item.phone == "" || item.phone == "undefined" || item.first_name == null || item.first_name == "" || item.first_name == "undefined") {
                                                         res.end('null');
                                                     } else {
                                                         item.employee_id = 'SCH-EMP-' + autoIndex;
