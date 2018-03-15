@@ -641,7 +641,12 @@ router.route('/edit_employee_details/:employee_id')
         var postal_code = req.body.postal_code;
         var perm_address = req.body.perm_address;
         var cur_address = req.body.cur_address;
-        var martial_status = req.body.martial_status
+        var marital_status = req.body.marital_status;
+        var pan_no = req.body.pan_no;
+        var aadhar_no = req.body.aadhar_no;
+        var passport_no = req.body.passport_no;
+        var alternate_email = req.body.alternate_email;
+
 
         mongo.connect(url, function (err, db) {
             db.collection('employee').update(myquery, {
@@ -670,7 +675,11 @@ router.route('/edit_employee_details/:employee_id')
                     country: country,
                     postal_code: postal_code,
                     //   perm_city: perm_city,
-                    martial_status: martial_status,
+                    marital_status: marital_status,
+                    aadhar_no:aadhar_no,
+                    passport_no:passport_no,
+                    pan_no:pan_no,
+                    alternate_email:alternate_email,
                     permanent_address: [{ perm_city: perm_city, perm_address: perm_address }],
                     current_address: [{ cur_address: cur_address }]
                 }

@@ -24,18 +24,18 @@ router.use(function (req, res, next) {
 
 // Add Exams
 
-router.route('/exams/:subject_id/:exam_sch_id/:class_id/:section_id')
+router.route('/exams/:subject_id/:exam_title/:class_id/:section_id')
     .post(function (req, res, next) {
         var status = 1;
         var subject_id = req.params.subject_id;
-        var exam_sch_id = req.params.exam_sch_id;
+        var exam_title = req.params.exam_title;
         var class_id = req.params.class_id;
         var section_id = req.params.section_id;
         subjects = [];
         var item = {
             exam_paper_id: 'getauto',
             subject_id: subject_id,
-            exam_sch_id: exam_sch_id,
+            exam_title: exam_title,
             subject_name: req.body.subject_name,
             exam_paper_title: req.body.exam_paper_title,
             date: req.body.date,
@@ -54,7 +54,7 @@ router.route('/exams/:subject_id/:exam_sch_id/:class_id/:section_id')
                 }, {
                         unique: true
                     }, function (err, result) {
-                        if (item.subject_id == null || item.exam_sch_id == null || item.exam_paper_title == null || item.date == null) {
+                        if (item.subject_id == null || item.exam_title == null || item.exam_paper_title == null || item.date == null) {
                             res.end('null');
                         } else {
                             collection.insertOne(item, function (err, result) {
@@ -68,7 +68,7 @@ router.route('/exams/:subject_id/:exam_sch_id/:class_id/:section_id')
                                     _id: item._id
                                 }, {
                                         $set: {
-                                            exam_paper_id: exam_sch_id + '-EXM-' + autoIndex
+                                            exam_paper_id: exam_title + '-EXM-' + autoIndex
                                         }
                                     }, function (err, result) {
                                         db.close();
@@ -82,10 +82,10 @@ router.route('/exams/:subject_id/:exam_sch_id/:class_id/:section_id')
 
     })
 
-router.route('/exams/:exam_sch_id/:class_id')
+router.route('/exams/:exam_title/:class_id')
     .get(function (req, res, next) {
 
-        var exam_sch_id = req.params.exam_sch_id;
+        var exam_title = req.params.exam_title;
         var class_id = req.params.class_id;
         var resultArray = [];
         mongo.connect(url, function (err, db) {
@@ -93,7 +93,7 @@ router.route('/exams/:exam_sch_id/:class_id')
             // var cursor = db.collection('exams').find({exam_sch_id});
             var cursor = db.collection('exams').aggregate([{
                 $match: {
-                    exam_sch_id: exam_sch_id,
+                    exam_title: exam_title,
                     class_id: class_id,
                     status: 1
                 }
@@ -116,7 +116,7 @@ router.route('/exams/:exam_sch_id/:class_id')
 
                     "exam_paper_id": { "$first": "$exam_paper_id" },
                     "subject_id": { "$first": "$subject_id" },
-                    "exam_sch_id": { "$first": "$exam_sch_id" },
+                    "exam_title": { "$first": "$exam_title" },
                     "exam_paper_title": { "$first": "$exam_paper_title" },
                     "date": { "$first": "$date" },
                     "start_time": { "$first": "$start_time" },
@@ -141,10 +141,10 @@ router.route('/exams/:exam_sch_id/:class_id')
         });
     });
 
-router.route('/examsbysectionid/:exam_sch_id/:section_id')
+router.route('/examsbysectionid/:exam_title/:section_id')
     .get(function (req, res, next) {
 
-        var exam_sch_id = req.params.exam_sch_id;
+        var exam_title = req.params.exam_title;
         var section_id = req.params.section_id;
         var resultArray = [];
         mongo.connect(url, function (err, db) {
@@ -152,7 +152,7 @@ router.route('/examsbysectionid/:exam_sch_id/:section_id')
             // var cursor = db.collection('exams').find({exam_sch_id});
             var cursor = db.collection('exams').aggregate([{
                 $match: {
-                    exam_sch_id: exam_sch_id,
+                    exam_title: exam_title,
                     section_id: section_id,
                     status: 1
                 }
@@ -174,7 +174,7 @@ router.route('/examsbysectionid/:exam_sch_id/:section_id')
                     _id: '$_id',
                     "exam_paper_id": { "$first": "$exam_paper_id" },
                     "subject_id": { "$first": "$subject_id" },
-                    "exam_sch_id": { "$first": "$exam_sch_id" },
+                    "exam_title": { "$first": "$exam_title" },
                     "exam_paper_title": { "$first": "$exam_paper_title" },
                     "date": { "$first": "$date" },
                     "start_time": { "$first": "$start_time" },
@@ -199,14 +199,14 @@ router.route('/examsbysectionid/:exam_sch_id/:section_id')
         });
     });
 
-router.route('/exams/:exam_sch_id')
+router.route('/exams/:exam_title')
     .get(function (req, res, next) {
 
         var exam_sch_id = req.params.exam_sch_id;
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('exams').find({ exam_sch_id });
+            var cursor = db.collection('exams').find({ exam_title });
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
@@ -340,6 +340,7 @@ router.route('/exam_eval/:exam_sch_id/:exam_paper_id/:student_id/:section_id/:cl
 
 //add bulk marks 
 
+
 router.route('/marksbulk_eval/:exam_sch_id/:exam_paper_id/:section_id/:class_id')
     .post(function (req, res, next) {
 
@@ -354,7 +355,7 @@ router.route('/marksbulk_eval/:exam_sch_id/:exam_paper_id/:section_id/:class_id'
             var count = 0;
             if (req.body.studentsMarks.length > 0) {
                 forEach(req.body.studentsMarks, function (key, value) {
-                    
+
                     var item = {
                         paper_result_id: '',
                         student_id: key.student_id,
@@ -412,28 +413,151 @@ router.route('/marksbulk_eval/:exam_sch_id/:exam_paper_id/:section_id/:class_id'
                                                 });
                                             }
                                         });
-
                                 }
                             });
-
-
-
                         });
                     });
-
                 });
-
-
             } else {
                 res.end('false');
             }
+        }
+    })
+
+
+router.route('/assessment_marksbulk_eval/:exam_title/:section_id/:class_id')
+    .post(function (req, res, next) {
+
+        var class_id = req.params.class_id;
+        var section_id = req.params.section_id;
+        var exam_sch_id = req.params.exam_title;
+        var assessment_id = req.body.assessment_id;
+        var splited = section_id.split("-");
+        var school_id = splited[0] + '-' + splited[1];
+        //  var exam_paper_id = req.params.exam_paper_id;
+        var assessmentMarks = [];
+
+        // var marksArray = req.body.studentsMarks;
+        // var splitted = marksArray.split(',');
+        // var firstAssessment = splitted[0];
+        // var secondAssessment = splitted[1];
+        // var thirdAssessment = splitted[2];
+        // var fourthAssessment = splitted[3];
+        // var studentsArray = req.body.students;
+        // var studentsArrayLength = studentsArray.length;
+
+        // for (i = 0; i < studentsArrayLength; i++) {
+
+        //     studentId = studentsArray[i].student_id;
+        //     firstAssessmentMarks = parseInt(firstAssessment[i]);
+        //     secondAssessmentMarks = parseInt(secondAssessment[i]);
+        //     thirdAssessmentMarks = parseInt(thirdAssessment[i]);
+        //     fourthAssessmentMarks = parseInt(fourthAssessment[i]);
+        //     assessmentMarks.push({ studentId: studentId, firstAssessmentMarks: firstAssessmentMarks, secondAssessmentMarks: secondAssessmentMarks, thirdAssessmentMarks: thirdAssessmentMarks })
+
+        // }
+
+        var marksArray = req.body.studentsMarks;
+        var marksArrayLength = marksArray.length;
+        var studentAssessmentMarks = [];
+
+
+        for (i = 0; i < marksArrayLength; i++) {
+
+            studentId = marksArray[i].student_id;
+            assMarks = marksArray[i].assMarks;
+            assMarksLength = assMarks.length;
+
+            for (j = 0; j < assMarksLength; j++) {
+
+                max_marks = assMarks[j].maxMarks;
+                marks = marksArray[i].marks[j];
+                code = assMarks[j].code;
+                innerCode = assMarks[j].FA;
+
+                studentAssessmentMarks.push({ student_id: studentId, FA: innerCode, code: code, marks: marks, max_marks: max_marks })
+            }
+            // assessmentMarks.push({student_id:studentId,})
 
 
         }
+        //   console.log(studentAssessmentMarks);
+        res.send("hi");
+
+        if (exam_title == null || section_id == null || studentAssessmentMarks) {
+            res.end('null');
+        } else {
+            var count = 0;
+            if (studentAssessmentMarks.length > 0) {
+                forEach(studentAssessmentMarks, function (key, value) {
+
+                    var item = {
+                        assessment_result_id: '',
+                        student_id: key.student_id,
+                        FA: key.FA,
+                        section_id: section_id,
+                        code: key.code,
+                        school_id: school_id,
+                        exam_title: exam_title,
+                        assessment_id: assessment_id,
+                        marks: key.marks,
+                        max_marks: key.max_marks,
+                    };
+
+                    mongo.connect(url, function (err, db) {
+                        autoIncrement.getNextSequence(db, 'assessment_evaluation', function (err, autoIndex) {
+                            var data = db.collection('assessment_evaluation').find({
+                                section_id: section_id,
+                                exam_title: exam_title,
+                                student_id: item.student_id
+                            }).count(function (e, triggerCount) {
+
+                                if (triggerCount > 0) {
+                                    count++;
+                                    if (count == studentAssessmentMarks.length) {
+                                        res.send('false');
+                                    }
+                                } else {
+                                    var collection = db.collection('assessment_evaluation');
+                                    collection.ensureIndex({
+                                        "assessment_result_id": 1,
+                                    }, {
+                                            unique: true
+                                        }, function (err, result) {
+                                            if (item.class_id == null || item.section_id == null || item.exam_title == null || item.marks == null) {
+                                                res.end('null');
+                                            } else {
+                                                item.assessment_result_id = item.school_id + '-' + item.assessment_id + '-EVAL-' + autoIndex;
+                                                collection.insertOne(item, function (err, result) {
+                                                    if (err) {
+                                                        console.log(err);
+                                                        if (err.code == 11000) {
+
+                                                            res.end('false');
+                                                        }
+                                                        res.end('false');
+                                                    }
+                                                    count++;
+                                                    db.close();
+
+                                                    if (count == req.body.studentAssessmentMarks.length) {
+                                                        res.end('true');
+                                                    }
 
 
+                                                });
+                                            }
+                                        });
+                                }
+                            });
+                        });
+                    });
+                });
+            } else {
+                res.end('false');
+            }
+        }
     })
-
 
 
 router.route('/exam_eval/:student_id/:exam_sch_id')

@@ -62,6 +62,7 @@ router.route('/unZip/:school_id')
                 .on('entry', function (entry) {
                     fileName = entry.path;
                     resultArray.push(fileName);
+                    console.log("hema");
                     var type = entry.type; // 'Directory' or 'File' 
                     // console.log(fileName);
                     var size = entry.size;

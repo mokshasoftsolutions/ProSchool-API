@@ -23,110 +23,6 @@ router.use(function (req, res, next) {
     next(); // make sure we go to the next routes and don't stop here
 });
 
-// router.route('/Assessment_pattern/:school_id')
-//     .post(function (req, res, next) {
-//         var status = 1;
-//         var school_id = req.params.school_id;
-
-
-//         var assessment_type = req.body.assessment_type;
-//         var max_marks = req.body.max_marks;
-//         var f_number = parseInt(req.body.f_number);
-//         var f_ind_number = parseInt(req.body.f_ind_number);
-//         var code = req.body.code;
-
-//         var item = {
-//             assessment_id: 'getauto',
-//             school_id: school_id,
-//             assessment_type: assessment_type,
-//             max_marks: max_marks,
-//             code: code,
-//         }
-
-
-
-
-//         assessments = [];
-
-//         for (i = 1; i < f_number + 1; i++) {
-//             code = code;
-//             FA_code = code + '-' + i;
-//             fa_array = [];
-
-//             for (j = 1; j < f_ind_number + 1; j++) {
-
-//                 FA_ind_code = FA_code + "-" + j;
-//                 fa_array.push(FA_ind_code);
-//                 //  console.log(fa_array);
-//             }
-//             assessments.push(fa_array);
-//         }
-//         console.log(assessments);
-
-//         var Formative_Assessment = {
-//             fcode: code,
-//             f_max_marks: max_marks,
-//             assessments: assessments,
-//         };
-
-//         mongo.connect(url, function (err, db) {
-//             autoIncrement.getNextSequence(db, 'Assessment_pattern', function (err, autoIndex) {
-//                 var collection = db.collection('Assessment_pattern');
-//                 collection.ensureIndex({
-//                     "assessment_id": 1,
-//                 }, {
-//                         unique: true
-//                     }, function (err, result) {
-//                         if (item.school_id == null || item.assessment_type == "undefined" || item.max_marks == "") {
-//                             res.end('null');
-//                         } else {
-//                             collection.insertOne(item, function (err, result) {
-//                                 if (err) {
-//                                     if (err.code == 11000) {
-//                                         res.end('false');
-//                                     }
-//                                     res.end('false');
-//                                 }
-//                                 collection.update({
-//                                     _id: item._id
-//                                 }, {
-//                                         $set: {
-//                                             assessment_id: 'Assessment' + autoIndex
-//                                         },
-//                                         $push: {
-//                                             Formative_Assessment
-//                                         }
-//                                     }, function (err, result) {
-//                                         db.close();
-//                                         res.end('true');
-//                                     });
-//                             });
-//                         }
-//                     });
-//             });
-//         });
-
-//     })
-//     .get(function (req, res, next) {
-
-//         var school_id = req.params.school_id;
-//         var assessment_type = req.params.assessment_type;
-//         var resultArray = [];
-//         mongo.connect(url, function (err, db) {
-//             assert.equal(null, err);
-//             var cursor = db.collection('Assessment_pattern').find({ school_id });
-//             cursor.forEach(function (doc, err) {
-//                 assert.equal(null, err);
-//                 resultArray.push(doc);
-//             }, function () {
-//                 db.close();
-//                 res.send({
-//                     feetypes: resultArray
-//                 });
-//             });
-//         });
-//     });
-
 router.route('/formative_assessment/:school_id')
     .post(function (req, res, next) {
         var school_id = req.params.school_id;
@@ -263,7 +159,7 @@ router.route('/formative_assessment/:school_id')
         });
     });
 
-router.route('/formative_assessment_innerloop/:assessment_id/:value/:number')
+router.route('/formative_assessment_innerloop/:assessment_id/:value/:number/:school_id')
     .post(function (req, res, next) {
 
         var assessment_id = req.params.assessment_id;
@@ -272,11 +168,12 @@ router.route('/formative_assessment_innerloop/:assessment_id/:value/:number')
         var item = {
             assessment_inner_id: 'getauto',
             assessment_id: assessment_id,
+            school_id:req.params.school_id,
             code: value,
             assMarks: req.body.assMarks,
             f_number: req.params.number,
             //  code: code,
-        }
+        };
 
         mongo.connect(url, function (err, db) {
             autoIncrement.getNextSequence(db, 'assessment_pattern_inner', function (err, autoIndex) {
@@ -311,6 +208,227 @@ router.route('/formative_assessment_innerloop/:assessment_id/:value/:number')
                                         }, {
                                                 $set: {
                                                     assessment_inner_id: 'Assessment-Inner-' + autoIndex
+                                                },
+                                                // $push: {
+                                                //     Formative_Assessment
+                                                // }
+                                            }, function (err, result) {
+                                                db.close();
+                                                res.end('true');
+                                            });
+                                    });
+                                }
+                            });
+                    }
+                });
+            });
+        });
+    })
+
+router.route('/formative_assessment_innerloop/:code/:school_id')
+    .get(function (req, res, next) {
+        var school_id = req.params.school_id;
+        var code = req.params.code;
+        var resultArray = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('assessment_pattern_inner').find({ school_id: school_id, code: code });
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    assessment: resultArray
+                });
+            });
+        });
+    });
+
+
+router.route('/summative_assessment/:school_id')
+    .post(function (req, res, next) {
+        var school_id = req.params.school_id;
+        var assessment_type = req.body.assessment_type;
+        var max_marks = req.body.max_marks;
+        var f_number = parseInt(req.body.number);
+        //  var f_ind_number = parseInt(req.body.f_ind_number);
+        var code = req.body.code;
+
+        var Summative_assessments = [];
+        var summativeAssessment = {};
+
+        for (i = 0; i < f_number; i++) {
+            code = code;
+            SA_code = code + '-' + parseInt(i + 1);
+
+            if (i == 0) {
+                Summative_assessments.push({ "SA": SA_code });
+                summativeAssessment.SA_1 = SA_code;
+            }
+            else if (i == 1) {
+                Summative_assessments.push({ "SA": SA_code });
+                summativeAssessment.SA_2 = SA_code;
+            }
+            else if (i == 2) {
+                Summative_assessments.push({ "SA": SA_code });
+                summativeAssessment.SA_3 = SA_code;
+            }
+            else if (i == 3) {
+                Summative_assessments.push({ "SA": SA_code });
+                summativeAssessment.SA_4 = SA_code;
+            }
+            else if (i == 4) {
+                Summative_assessments.push({ "SA": SA_code });
+                summativeAssessment.SA_5 = SA_code;
+            }
+            else if (i == 5) {
+                Summative_assessments.push({ "SA": SA_code });
+                summativeAssessment.SA_6 = SA_code;
+            }
+            else if (i == 6) {
+                Summative_assessments.push({ "SA": SA_code });
+                summativeAssessment.SA_7 = SA_code;
+            }
+            else if (i == 7) {
+                Summative_assessments.push({ "SA": SA_code });
+                summativeAssessment.SA_8 = SA_code;
+            }
+            else if (i == 8) {
+                Summative_assessments.push({ "SA": SA_code });
+                summativeAssessment.SA_9 = SA_code;
+            }
+            else if (i == 9) {
+                Summative_assessments.push({ "SA": SA_code });
+                summativeAssessment.SA_10 = SA_code;
+            }
+            // assessments.push({ "FA": FA_code });
+            // fa_array = [];
+
+        }
+
+        var item = {
+            summative_assessment_id: 'getauto',
+            school_id: school_id,
+            assessment_type: assessment_type,
+            max_marks: max_marks,
+            f_number: f_number,
+            code: code,
+            Summative_assessments: Summative_assessments,
+            summativeAssessment: summativeAssessment
+        }
+
+        mongo.connect(url, function (err, db) {
+            autoIncrement.getNextSequence(db, 'summative_assessment', function (err, autoIndex) {
+
+                var data = db.collection('summative_assessment').find({
+                    school_id: item.school_id
+                }).count(function (e, triggerCount) {
+
+                    if (triggerCount > 0) {
+                        res.send('false');
+                    } else {
+                        var collection = db.collection('summative_assessment');
+                        collection.ensureIndex({
+                            "summative_assessment_id": 1,
+                        }, {
+                                unique: true
+                            }, function (err, result) {
+                                if (item.assessment_type == null) {
+                                    res.end('null');
+                                } else {
+                                    collection.insertOne(item, function (err, result) {
+                                        if (err) {
+                                            if (err.code == 11000) {
+                                                console.log(err);
+                                                res.end('false');
+                                            }
+                                            res.end('false');
+                                        }
+                                        collection.update({
+                                            _id: item._id
+                                        }, {
+                                                $set: {
+                                                    summative_assessment_id: 'summative-Assessment-' + autoIndex
+                                                },
+                                            }, function (err, result) {
+                                                db.close();
+                                                res.end('true');
+                                            });
+                                    });
+                                }
+                            });
+                    }
+                });
+            });
+        });
+    })
+    .get(function (req, res, next) {
+        var school_id = req.params.school_id;
+        var resultArray = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('summative_assessment').find({ school_id });
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    assessment: resultArray
+                });
+            });
+        });
+    });
+
+router.route('/summative_assessment_innerloop/:summative_assessment_id/:value/:number')
+    .post(function (req, res, next) {
+
+        var summative_assessment_id = req.params.summative_assessment_id;
+        var value = req.params.value;
+
+        var item = {
+            summative_assessment_inner_id: 'getauto',
+            summative_assessment_id: summative_assessment_id,
+            code: value,
+            assMarks: req.body.assMarks,
+            f_number: req.params.number,
+            //  code: code,
+        };
+
+        mongo.connect(url, function (err, db) {
+            autoIncrement.getNextSequence(db, 'summative_assessment_pattern_inner', function (err, autoIndex) {
+                var data = db.collection('summative_assessment_pattern_inner').find({
+                    summative_assessment_id: item.summative_assessment_id,
+                    code: item.code
+                }).count(function (e, triggerCount) {
+
+                    if (triggerCount > 0) {
+                        res.send('false');
+                    } else {
+                        var collection = db.collection('summative_assessment_pattern_inner');
+
+                        collection.ensureIndex({
+                            "summative_assessment_inner_id": 1,
+                        }, {
+                                unique: true
+                            }, function (err, result) {
+                                if (item.summative_assessment_id == null || item.summative_assessment_id == "" || item.f_number == "" || item.assMarks == "undefined" || item.assMarks == "" || item.summative_assessment_id == "undefined" || item.f_number == "undefined") {
+                                    res.end('null');
+                                } else {
+                                    collection.insertOne(item, function (err, result) {
+                                        if (err) {
+                                            if (err.code == 11000) {
+                                                console.log(err);
+                                                res.end('false');
+                                            }
+                                            res.end('false');
+                                        }
+                                        collection.update({
+                                            _id: item._id
+                                        }, {
+                                                $set: {
+                                                    summative_assessment_inner_id: 'summative-Assessment-Inner-' + autoIndex
                                                 },
                                                 // $push: {
                                                 //     Formative_Assessment

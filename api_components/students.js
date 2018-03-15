@@ -503,6 +503,14 @@ router.route('/student_details/:student_id')
                         foreignField: "section_id",
                         as: "sections"
                     }
+                },
+                {
+                    $lookup: {
+                        from: "Bus-Route",
+                        localField: "bus_route_id",
+                        foreignField: "bus_route_id",
+                        as: "busroute"
+                    }
                 }
             ]);
             cursor.forEach(function (doc, err) {
@@ -968,6 +976,7 @@ router.route('/edit_student_details/:student_id')
                     admission_date: req_admission_date,
                     roll_no: req_roll_no,
                     blood_group: blood_group,
+                    bus_route_id:bus_route_id,
                     // parents: [{
                     //     0: [{ parent_name: req_father_name, parent_contact: father_contact, parent_relation: "father", occupation: father_occupation }],
                     //     1: [{ parent_name: mother_name, parent_contact: mother_contact, parent_relation: "mother", occupation: mother_occupation }],
