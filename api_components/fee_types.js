@@ -680,10 +680,7 @@ router.route('/fee_by_Date/:select_date/:school_id')
         endDate.setDate(endDate.getDate() + 1)
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            // var cursor = db.collection('student_fee').find({
-            //     current_date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
-            //     school_id: school_id
-            // });
+
             var cursor = db.collection('student_fee').aggregate([
                 {
                     $match: {
@@ -765,161 +762,99 @@ router.route('/fee_by_Date/:select_date/:school_id')
         });
     });
 
-// router.route('/yesterday_fee_amount/:select_date/:school_id')
-//     .get(function (req, res, next) {
-//         var resultArray = [];
-//         var school_id = req.params.school_id;
-//         var select_date = new Date(req.params.select_date);
-//         var endDate = new Date(select_date);
-//         endDate.setDate(endDate.getDate() - 1)
-//         mongo.connect(url, function (err, db) {
-//             assert.equal(null, err);
-//             var cursor = db.collection('student_fee').aggregate([
-//                 {
-//                     $match: {
-//                         current_date: {
-//                             $gte: new Date(endDate.toISOString()),
-//                             $lt: new Date(select_date.toISOString())
-//                         }
-//                     },
-//                 },
-//                 {
-//                     $lookup: {
-//                         from: "feetypes",
-//                         localField: "fee_types_id",
-//                         foreignField: "fee_types_id",
-//                         as: "fee_doc"
-//                     }
-//                 },
-//                 {
-//                     $unwind: "$fee_doc"
-//                 },
-//                 {
-//                     $lookup: {
-//                         from: "students",
-//                         localField: "student_id",
-//                         foreignField: "student_id",
-//                         as: "student_doc"
-//                     }
-//                 },
-//                 {
-//                     $unwind: "$student_doc"
-//                 },
-//                 {
-//                     "$project": {
-//                         "_id": "$_id",
-//                         "student_Name": "$student_doc.first_name",
-//                         "student_id": "$student_id",
-//                         "fee_types_id": "$fee_types_id",
-//                         "fee_type": "$fee_doc.fee_type",
-//                         // "totalFee": "$feeMaster_doc.fee_amount",
-//                         "payment_mode": "$payment_mode",
-//                         "discount": "$discount",
-//                         "fine": "$fine",
-//                         "current_date": "$current_date",
-//                         // "due_date": "$feeMaster_doc.due_date",
-//                         "fee_paid": "$fee_paid",
-//                         "fee_category": "$feetype.fee_category",
-//                         // "fee_amount": "$feemaster.fee_amount",
-//                     }
-//                 }
-//             ])
-//             cursor.forEach(function (doc, err) {
-//                 assert.equal(null, err);
-//                 resultArray.push(doc);
-//             }, function () {
-//                 var feePaid = 0;
-//                 for (i = 0; i < resultArray.length; i++) {
-//                     feePaid += parseInt(resultArray[i].fee_paid);
-//                 }
-//                 db.close();
-//                 res.send({
-//                     // fee: resultArray,
-//                     yesterDayfeePaid: feePaid
-//                 });
-//             });
 
-//         });
-//     });
+router.route('/fee_by_Month/:select_month/:school_id')
+    .get(function (req, res, next) {
+        var resultArray = [];
+        var school_id = req.params.school_id;
+        var select_month = parseInt(req.params.select_month);
 
-// router.route('/lastweek_fee_amount/:select_date/:school_id')
-//     .get(function (req, res, next) {
-//         var resultArray = [];
-//         var school_id = req.params.school_id;
-//         var select_date = new Date(req.params.select_date);
-//         var presentDate = new Date(select_date);
-//         presentDate.setDate(presentDate.getDate() + 1)
-//         var endDate = new Date(select_date);
-//         endDate.setDate(endDate.getDate() - 6)
-//         mongo.connect(url, function (err, db) {
-//             assert.equal(null, err);
-//             var cursor = db.collection('student_fee').aggregate([
-//                 {
-//                     $match: {
-//                         current_date: {
-//                             $gte: new Date(endDate.toISOString()),
-//                             $lt: new Date(presentDate.toISOString())
-//                         }
-//                     },
-//                 },
-//                 {
-//                     $lookup: {
-//                         from: "feetypes",
-//                         localField: "fee_types_id",
-//                         foreignField: "fee_types_id",
-//                         as: "fee_doc"
-//                     }
-//                 },
-//                 {
-//                     $unwind: "$fee_doc"
-//                 },
-//                 {
-//                     $lookup: {
-//                         from: "students",
-//                         localField: "student_id",
-//                         foreignField: "student_id",
-//                         as: "student_doc"
-//                     }
-//                 },
-//                 {
-//                     $unwind: "$student_doc"
-//                 },
-//                 {
-//                     "$project": {
-//                         "_id": "$_id",
-//                         "student_Name": "$student_doc.first_name",
-//                         "student_id": "$student_id",
-//                         "fee_types_id": "$fee_types_id",
-//                         "fee_type": "$fee_doc.fee_type",
-//                         // "totalFee": "$feeMaster_doc.fee_amount",
-//                         "payment_mode": "$payment_mode",
-//                         "discount": "$discount",
-//                         "fine": "$fine",
-//                         "current_date": "$current_date",
-//                         // "due_date": "$feeMaster_doc.due_date",
-//                         "fee_paid": "$fee_paid",
-//                         "fee_category": "$feetype.fee_category",
-//                         // "fee_amount": "$feemaster.fee_amount",
-//                     }
-//                 }
-//             ])
-//             cursor.forEach(function (doc, err) {
-//                 assert.equal(null, err);
-//                 resultArray.push(doc);
-//             }, function () {
-//                 var feePaid = 0;
-//                 for (i = 0; i < resultArray.length; i++) {
-//                     feePaid += parseInt(resultArray[i].fee_paid);
-//                 }
-//                 db.close();
-//                 res.send({
-//                     // fee: resultArray,
-//                     lastweekfeePaid: feePaid
-//                 });
-//             });
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('student_fee').aggregate([
+                {
+                    $match: {
+                        school_id: school_id
+                    },
+                },
+                {
+                    "$redact": {
+                        "$cond": [
+                            { "$eq": [{ "$month": "$current_date" }, select_month] },
+                            "$$KEEP",
+                            "$$PRUNE"
+                        ]
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "fee_type",
+                        localField: "fee_types_id",
+                        foreignField: "fee_types_id",
+                        as: "fee_doc"
+                    }
+                },
+                {
+                    $unwind: "$fee_doc"
+                },
+                {
+                    $lookup: {
+                        from: "fee_term",
+                        localField: "fee_term_id",
+                        foreignField: "fee_term_id",
+                        as: "fee_term_doc"
+                    }
+                },
+                {
+                    $unwind: "$fee_term_doc"
+                },
+                {
+                    $lookup: {
+                        from: "students",
+                        localField: "student_id",
+                        foreignField: "student_id",
+                        as: "student_doc"
+                    }
+                },
+                {
+                    $unwind: "$student_doc"
+                },
+                {
+                    "$project": {
+                        "_id": "$_id",
+                        "student_Name": "$student_doc.first_name",
+                        "student_id": "$student_id",
+                        "fee_types_id": "$fee_types_id",
+                        "fee_type": "$fee_doc.fee_type",
+                        "fee_term_id": "$fee_term_id",
+                        "fee_term": "$fee_term_doc.fee_term",
+                        "payment_mode": "$payment_mode",
+                        "discount": "$discount",
+                        "fine": "$fine",
+                        "current_date": "$current_date",
+                        "total_fee": "$total_fee",
+                        "fee_paid": "$fee_paid",                       
 
-//         });
-//     });
+                    }
+                }
+            ])
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                var feePaid = 0;
+                for (i = 0; i < resultArray.length; i++) {
+                    feePaid += parseInt(resultArray[i].fee_paid);
+                }
+                db.close();
+                res.send({
+                    fee: resultArray,
+                    feePaid: feePaid
+                });
+            });
+
+        });
+    });
 
 
 router.route('/feetypes/:school_id/:class_id')
@@ -1427,7 +1362,7 @@ router.route('/school_fee_details_for_dashboard/:date/:school_id')
 
 //Add student fees
 
-router.route('/student/feecollect/:school_id/:student_id')
+router.route('/student/feecollect/:student_id/:school_id')
     .post(function (req, res, next) {
         var status = 1;
         var academic_year = "2017-2018";

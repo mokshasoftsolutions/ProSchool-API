@@ -9,6 +9,8 @@ var autoIncrement = require("mongodb-autoincrement");
 var assert = require('assert');
 var multer = require('multer');
 var teacherModule = require('../api_components/teacher_module');
+var adminModule = require('../api_components/admin_module');
+var nonTeachingModule = require('../api_components/nonTeaching_module');
 var xlstojson = require("xls-to-json-lc");
 var xlsxtojson = require("xlsx-to-json-lc");
 var forEach = require('async-foreach').forEach;
@@ -160,6 +162,26 @@ router.route('/employee/:school_id')
                                         requestData.school_id = school_id;
 
                                         teacherModule.addTeacher(requestData);
+
+                                    }
+                                    else if (item.job_category == "administrative") {
+                                        var requestData = {}
+                                        requestData.name = item.first_name + " " + item.last_name;
+                                        requestData.employee_id = 'SCH-EMP-' + autoIndex;
+                                        requestData.joined_on = item.joined_on;
+                                        requestData.school_id = school_id;
+
+                                        adminModule.addAdmin(requestData);
+
+                                    }
+                                    else if (item.job_category == "non-teaching") {
+                                        var requestData = {}
+                                        requestData.name = item.first_name + " " + item.last_name;
+                                        requestData.employee_id = 'SCH-EMP-' + autoIndex;
+                                        requestData.joined_on = item.joined_on;
+                                        requestData.school_id = school_id;
+
+                                        nonTeachingModule.addNonTeaching(requestData);
 
                                     }
 
