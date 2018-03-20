@@ -551,17 +551,18 @@ router.route('/bulk_upload_employees/:school_id')
                                                                     }
                                                                 });
                                                             // console.log(item.job_category);
-                                                            if (item.job_category == "teaching") {
-                                                                // console.log("hema");
-                                                                var requestData = {}
-                                                                requestData.name = item.first_name + " " + item.last_name;
-                                                                requestData.employee_id = 'SCH-EMP-' + autoIndex;
-                                                                requestData.joined_on = item.joined_on;
-                                                                requestData.school_id = school_id;
-                                                                teachers_account.push(requestData);
-                                                                // teacherModule.addTeacher(requestData);
+                                                            // if (item.job_category == "teaching") {
+                                                            // console.log("hema");
+                                                            var requestData = {}
+                                                            requestData.name = item.first_name + " " + item.last_name;
+                                                            requestData.employee_id = 'SCH-EMP-' + autoIndex;
+                                                            requestData.joined_on = item.joined_on;
+                                                            requestData.job_category = item.job_category;
+                                                            requestData.school_id = school_id;
+                                                            teachers_account.push(requestData);
+                                                            // teacherModule.addTeacher(requestData);
 
-                                                            }
+                                                            // }
                                                             count1++;
                                                             db.close();
 
@@ -698,10 +699,10 @@ router.route('/edit_employee_details/:employee_id')
                     postal_code: postal_code,
                     //   perm_city: perm_city,
                     marital_status: marital_status,
-                    aadhar_no:aadhar_no,
-                    passport_no:passport_no,
-                    pan_no:pan_no,
-                    alternate_email:alternate_email,
+                    aadhar_no: aadhar_no,
+                    passport_no: passport_no,
+                    pan_no: pan_no,
+                    alternate_email: alternate_email,
                     permanent_address: [{ perm_city: perm_city, perm_address: perm_address }],
                     current_address: [{ cur_address: cur_address }]
                 }

@@ -39,12 +39,12 @@ router.route('/exams/:exam_sch_id')
         var End_times = req.body.End_times;
         var exams = [];
 
-        for(i=0; i<ind_ass.length; i++) {
+        for (i = 0; i < ind_ass.length; i++) {
             ind_assessment = ind_ass[i].FA;
             exam_date = Exam_dates[i];
             start_time = Start_times[i];
             end_time = End_times[i];
-            n = i+1;
+            n = i + 1;
 
             var exam = {};
             exam["Assessment"] = ind_assessment;
@@ -138,20 +138,20 @@ router.route('/exams/:exam_title/:section_id')
                     // "section_id": { "$first": "$section_id" }
                 }
             }
-            ]).sort( { subject_id: 1 } );
+            ]).sort({ subject_id: 1 });
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
             }, function () {
                 db.close();
                 res.send({
-                    exams : resultArray,
+                    exams: resultArray,
                 });
             });
         });
     });
 
-    router.route('/assessment_marksbulk_eval/:exam_title/:section_id/:subjectId')
+router.route('/assessment_marksbulk_eval/:exam_title/:section_id/:subjectId')
     .post(function (req, res, next) {
 
         var subjectId = req.params.subjectId;
@@ -175,8 +175,8 @@ router.route('/exams/:exam_title/:section_id')
             assMarks = marksArray[i].assMarks;
             assMarksLength = assMarks.length;
             var Marks = [];
-            var Total_maxMarks = parseInt(0);
-            var Total_marks = parseInt(0);
+            var Total_maxMarks = 0;
+            var Total_marks = 0;
 
             for (j = 0; j < assMarksLength; j++) {
 
@@ -189,10 +189,28 @@ router.route('/exams/:exam_title/:section_id')
                 Total_marks += parseInt(marks);
                 Total_maxMarks += parseInt(ind_maxMarks);
                 Marks.push(ind_marks);
-
+                percentage = (parseInt(Total_marks) / parseInt(Total_maxMarks)) * parseInt(100);
             }
 
-            studentAssessmentMarks.push({ student_id: studentId, Marks: Marks, Total_marks: Total_marks, Total_maxMarks: Total_maxMarks })
+            if (percentage > 90 && percentage <= 100) {
+                grade = "A1";
+            } else if (percentage > 80 && percentage <= 90) {
+                grade = "A2";
+            } else if (percentage > 70 && percentage <= 80) {
+                grade = "B1";
+            } else if (percentage > 60 && percentage <= 70) {
+                grade = "B2";
+            } else if (percentage > 50 && percentage <= 60) {
+                grade = "C1";
+            } else if (percentage > 40 && percentage <= 50) {
+                grade = "C2";
+            } else if (percentage > 34 && percentage <= 40) {
+                grade = "D";
+            } else {
+                grade = "E";
+            };
+
+            studentAssessmentMarks.push({ student_id: studentId, Marks: Marks, Total_marks: Total_marks, Total_maxMarks: Total_maxMarks, grade: grade })
         }
         //  console.log(studentAssessmentMarks);
 
@@ -214,6 +232,7 @@ router.route('/exams/:exam_title/:section_id')
                         maxMarks: key.Total_maxMarks,
                         Marks: key.Marks,
                         Total_marks: key.Total_marks,
+                        Grade: grade,
                     };
 
                     mongo.connect(url, function (err, db) {
@@ -335,7 +354,8 @@ router.route('/assessment_marks_by_section_id/:exam_title/:section_id')
                                                 assessment_id: "$assessment_id",
                                                 maxMarks: "$maxMarks",
                                                 marks: "$Marks",
-                                                totalMarks: "$Total_maxMarks",
+                                                totalMarks: "$Total_marks",
+                                                grade: "$Grade",
 
                                             }
                                     }
@@ -484,7 +504,8 @@ router.route('/all_assessment_marks_by_section_id/:section_id')
                                                 assessment_id: "$assessment_id",
                                                 maxMarks: "$maxMarks",
                                                 marks: "$Marks",
-                                                totalMarks: "$Total_marks"
+                                                totalMarks: "$Total_marks",
+                                                grade: "$Grade",
                                             }
                                     }
                                 ]).sort({ subject_id: 1 }).toArray(function (err, results) {
@@ -553,8 +574,8 @@ router.route('/all_assessment_marks_by_section_id/:section_id')
                                         var subjects = [];
                                         examTitle = scheduleArray[i].exam_title;
                                         var totalAllMarks = 0;
+                                        var totalMaxMarks = 0;
                                         for (j = 0; j < assessmentsDataLength; j++) {
-
 
                                             if (examTitle == assessments[j].exam_title) {
                                                 //  console.log("hema");
@@ -562,14 +583,33 @@ router.route('/all_assessment_marks_by_section_id/:section_id')
                                                 subject_name = assessments[j].subject;
                                                 max_marks = assessments[j].maxMarks;
                                                 totalAllMarks += totalMarks;
+                                                totalMaxMarks += parseInt(max_marks);
+                                                percentage = (parseInt(totalAllMarks) / parseInt(totalMaxMarks)) * parseInt(100);
+                                                if (percentage > 90 && percentage <= 100) {
+                                                    grade = "A1";
+                                                } else if (percentage > 80 && percentage <= 90) {
+                                                    grade = "A2";
+                                                } else if (percentage > 70 && percentage <= 80) {
+                                                    grade = "B1";
+                                                } else if (percentage > 60 && percentage <= 70) {
+                                                    grade = "B2";
+                                                } else if (percentage > 50 && percentage <= 60) {
+                                                    grade = "C1";
+                                                } else if (percentage > 40 && percentage <= 50) {
+                                                    grade = "C2";
+                                                } else if (percentage > 34 && percentage <= 40) {
+                                                    grade = "D";
+                                                } else {
+                                                    grade = "E";
+                                                };
 
-                                                subjects.push({ subject_name: subject_name, max_marks: max_marks, total_marks: totalMarks })
+                                                subjects.push({ subject_name: subject_name, max_marks: max_marks, total_marks: totalMarks, totalAllMarks: totalAllMarks, grade: grade })
 
                                             }
 
 
                                         }
-                                        exam_marks.push({ exam_title: examTitle, subjects: subjects, totalAllMarks: totalAllMarks })
+                                        exam_marks.push({ exam_title: examTitle, subjects: subjects, totalAllMarks: totalAllMarks, totalMaxMarks: totalMaxMarks })
 
 
                                     }
@@ -640,7 +680,7 @@ router.route('/all_assessment_marks_by_student_id/:student_id')
                                     foreignField: "subject_id",
                                     as: "subject_doc"
                                 }
-                            }, 
+                            },
                             {
                                 $unwind: "$subject_doc"
                             },
@@ -717,17 +757,17 @@ router.route('/all_assessment_marks_by_student_id/:student_id')
 
                                 var exam_title = scheduleData.exam_title;
 
-                                
+
                                 var subjects = [];
                                 for (i = 0; i < assessmentResultLength; i++) {
 
-                                   
+
                                     examTitle = assessmentResult[i].exam_title;
                                     var totalAllMarks = 0;
 
 
                                     if (exam_title == examTitle) {
-                                        
+
                                         totalMarks = parseInt(assessmentResult[i].totalMarks);
                                         subject_name = assessmentResult[i].subject;
                                         max_marks = assessmentResult[i].maxMarks;
@@ -735,12 +775,12 @@ router.route('/all_assessment_marks_by_student_id/:student_id')
 
                                         subjects.push({ subject_name: subject_name, max_marks: max_marks, total_marks: totalMarks })
 
-                                    }  
-                                    console.log(subjects);                                
+                                    }
+                                    console.log(subjects);
 
                                 }
                                 exam_marks.push({ exam_title: exam_title, subjects: subjects, totalAllMarks: totalAllMarks })
-                               
+
 
                                 count++;
                                 // classAttendance.push(attendanceSection);
@@ -798,7 +838,7 @@ router.route('/exams/:exam_sch_id')
 
 
 
-   
+
 // Exams papers bulk upload via excel sheet
 
 

@@ -451,7 +451,7 @@ router.route('/student_tillDate_attendence/:student_id')
                 {
                     $project:
                         {
-                            name: "$student_doc.first_name",
+                            firstName: "$student_doc.first_name",
                             lastName: "$student_doc.last_name",
                             admissionNo: "$student_doc.admission_no",
                             rollNo: "$student_doc.roll_no",
@@ -469,72 +469,80 @@ router.route('/student_tillDate_attendence/:student_id')
                 assert.equal(null, err);
                 resultArray.push(doc);
             }, function () {
-                monthArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-                monthString = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
-                // console.log(attendanceArray[0]);
-                studentName = resultArray[0].name + " " + resultArray[0].lastName;
-                admissionNo = resultArray[0].admissionNo;
-                rollNo = resultArray[0].rollNo;
-                className = resultArray[0].className;
-                sectionName = resultArray[0].sectionName;
-                gender = resultArray[0].gender;
-                for (i = 0; i < monthArray.length; i++) {
-                    monthValue = monthArray[i];
-                    monthName = monthString[i];
-                    // console.log(resultMonth);
-                    present = absent = onLeave = 0;
-                    monthAttendence = {};
-                    for (j = 0; j < resultArray.length; j++) {
-
-                        if (monthValue == resultArray[j].month) {
-                            // console.log("hema");
-                            if (resultArray[j].status == "Present") {
-                                present += 1;
-                            }
-                            else if (resultArray[j].status == "Absent") {
-                                absent += 1;
-                            }
-                            else if (resultArray[j].status == "On Leave") {
-                                onLeave += 1;
-                            }
-                        }
-
+                if (resultArray.length > 0) {
+                    monthArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+                    monthString = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
+                    // console.log(resultArray[0]);
+                    studentName = "";
+                    if (resultArray[0].firstName && resultArray[0].lastName) {
+                        studentName = resultArray[0].name + " " + resultArray[0].lastName;
                     }
-                    percent = present + absent + onLeave;
-                    totalAbsent += absent;
-                    totalOnLeave += onLeave;
-                    totalPresent += present;
-                    totalDays += percent;
-                    prePercent = (100 * present) / percent;
-                    // prePercent = Math.round(prePercent);
-                    abPercent = (100 * absent) / percent;
-                    // abPercent = Math.round(abPercent);
-                    onPercent = (100 * onLeave) / percent;
-                    // onPercent = Math.round(onPercent);
-                    monthAttendence.present = present;
-                    monthAttendence.absent = absent;
-                    monthAttendence.onLeave = onLeave;
-                    // console.log(monthAttendence);
-                    monthAttendence.presentPercent = prePercent + "%";
-                    monthAttendence.absentPercent = abPercent + "%";
-                    monthAttendence.onLeavePercent = onPercent + "%";
-                    studentAttendence.push({ "monthName": monthName, "month": monthValue, "count": percent, "attendance": monthAttendence })
-                }
-                db.close();
-                res.send({
-                    totalDays: totalDays,
-                    totalAbsent: totalAbsent,
-                    totalOnLeave: totalOnLeave,
-                    totalPresent: totalPresent,
-                    studentAttendence: studentAttendence,
-                    className: className,
-                    sectionName: sectionName,
-                    admissionNo: admissionNo,
-                    rollNo: rollNo,
-                    studentName: studentName,
-                    gender: gender
+                    admissionNo = resultArray[0].admissionNo;
+                    rollNo = resultArray[0].rollNo;
+                    className = resultArray[0].className;
+                    sectionName = resultArray[0].sectionName;
+                    gender = resultArray[0].gender;
+                    for (i = 0; i < monthArray.length; i++) {
+                        monthValue = monthArray[i];
+                        monthName = monthString[i];
+                        // console.log(resultMonth);
+                        present = absent = onLeave = 0;
+                        monthAttendence = {};
+                        for (j = 0; j < resultArray.length; j++) {
 
-                });
+                            if (monthValue == resultArray[j].month) {
+                                // console.log("hema");
+                                if (resultArray[j].status == "Present") {
+                                    present += 1;
+                                }
+                                else if (resultArray[j].status == "Absent") {
+                                    absent += 1;
+                                }
+                                else if (resultArray[j].status == "On Leave") {
+                                    onLeave += 1;
+                                }
+                            }
+
+                        }
+                        percent = present + absent + onLeave;
+                        totalAbsent += absent;
+                        totalOnLeave += onLeave;
+                        totalPresent += present;
+                        totalDays += percent;
+                        prePercent = (100 * present) / percent;
+                        // prePercent = Math.round(prePercent);
+                        abPercent = (100 * absent) / percent;
+                        // abPercent = Math.round(abPercent);
+                        onPercent = (100 * onLeave) / percent;
+                        // onPercent = Math.round(onPercent);
+                        monthAttendence.present = present;
+                        monthAttendence.absent = absent;
+                        monthAttendence.onLeave = onLeave;
+                        // console.log(monthAttendence);
+                        monthAttendence.presentPercent = prePercent + "%";
+                        monthAttendence.absentPercent = abPercent + "%";
+                        monthAttendence.onLeavePercent = onPercent + "%";
+                        studentAttendence.push({ "monthName": monthName, "month": monthValue, "count": percent, "attendance": monthAttendence })
+                    }
+                    db.close();
+                    res.send({
+                        totalDays: totalDays,
+                        totalAbsent: totalAbsent,
+                        totalOnLeave: totalOnLeave,
+                        totalPresent: totalPresent,
+                        studentAttendence: studentAttendence,
+                        className: className,
+                        sectionName: sectionName,
+                        admissionNo: admissionNo,
+                        rollNo: rollNo,
+                        studentName: studentName,
+                        gender: gender
+
+                    });
+                }
+                else {
+                    res.send("false");
+                }
             });
         });
     });
