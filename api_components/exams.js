@@ -743,7 +743,7 @@ router.route('/all_assessment_marks_by_student_id/:student_id')
                         var assessmentResultLength = results.length;
                         var scheduleArray = scheduleResult;
                         var scheduleArrayLength = scheduleArray.length;
-                        var student_name = assessmentResult[0].student_id;
+                        var student_id = assessmentResult[0].student_id;
                         var student_name = assessmentResult[0].student_name;
                         var exam_marks = [];
 
@@ -776,7 +776,7 @@ router.route('/all_assessment_marks_by_student_id/:student_id')
                                         subjects.push({ subject_name: subject_name, max_marks: max_marks, total_marks: totalMarks })
 
                                     }
-                                    console.log(subjects);
+                                  //  console.log(subjects);
 
                                 }
                                 exam_marks.push({ exam_title: exam_title, subjects: subjects, totalAllMarks: totalAllMarks })
@@ -888,7 +888,7 @@ router.route('/bulk_upload_exampapers/:subject_id/:exam_sch_id/:class_id/:sectio
             } else {
                 exceltojson = xlstojson;
             }
-            console.log(req.file.path);
+         //   console.log(req.file.path);
             try {
                 exceltojson({
                     input: req.file.path,
@@ -899,7 +899,7 @@ router.route('/bulk_upload_exampapers/:subject_id/:exam_sch_id/:class_id/:sectio
                         return res.json({ error_code: 1, err_desc: err, data: null });
                     }
                     res.json({ data: result });
-                    console.log(result[0]);
+                //    console.log(result[0]);
                     var test = result;
                     var count = 0;
 
@@ -1001,7 +1001,7 @@ router.route('/bulk_upload_exam_eval/:exam_sch_id/:exam_paper_id/:student_id/:se
             } else {
                 exceltojson = xlstojson;
             }
-            console.log(req.file.path);
+           // console.log(req.file.path);
             try {
                 exceltojson({
                     input: req.file.path,

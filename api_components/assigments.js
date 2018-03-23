@@ -10,6 +10,8 @@ var multer = require('multer');
 var xlstojson = require("xls-to-json-lc");
 var xlsxtojson = require("xlsx-to-json-lc");
 var forEach = require('async-foreach').forEach;
+var async = require('async');
+var waterfall = require('async-waterfall');
 var port = process.env.PORT || 4005;
 
 var router = express.Router();
@@ -375,6 +377,173 @@ router.route('/student_assignment_marks/:subject_id/:student_id')
     });
 
 
+router.route('/student_assignment/:date/:student_id/:section_id')
+    .get(function (req, res, next) {
+        var resultArray = [];
+        var section_id = req.params.section_id;
+        var student_id = req.params.student_id;
+        var assign_date = req.params.date;
+        mongo.connect(url, function (err, db) {
+
+            async.waterfall(
+                [
+                    function getSectionSubject(next) {
+                        db.collection('students').find({
+                            student_id
+                        }).toArray(function (err, studentResult) {
+                            if (err) {
+                                next(err, null);
+                            }
+                            next(null, studentResult);
+                        });
+                    },
+                    function getSectionSubject(studentResult, next) {
+                        db.collection('subjects').find({
+                            section_id
+                        }).toArray(function (err, result) {
+                            if (err) {
+                                next(err, null);
+                            }
+                            next(null, studentResult, result);
+                        });
+                    },
+                    function getSectionSubjectsData(studentResult, result, next) {
+                        //   console.log("getSectionsData");                      
+                        var count = 0;
+
+                        var subjectsResult = result;
+                        var subjectsResultLength = result.length;
+                        var Student_assignments = [];
+                        if (subjectsResultLength == 0) {
+                            next(null, []);
+                        } else {
+                            //  console.log("In Second step sections")
+                            subjectsResult.forEach(function (subjectData) {
+                                var subject_id = subjectData.subject_id;
+                                // console.log(subject_id);
+                                db.collection('assignments').aggregate([
+                                    {
+                                        $match: {
+                                            section_id: section_id,
+                                            subject_id: subject_id,
+                                            assign_date: assign_date,
+                                        },
+                                    },
+                                    {
+                                        $lookup: {
+                                            from: "subjects",
+                                            localField: "subject_id",
+                                            foreignField: "subject_id",
+                                            as: "subject_doc"
+                                        }
+                                    },
+                                    {
+                                        $unwind: "$subject_doc"
+                                    },
+                                    // {
+                                    //     $lookup: {
+                                    //         from: "coursework",
+                                    //         localField: "lession_id",
+                                    //         foreignField: "title",
+                                    //         as: "chapters_doc"
+                                    //     }
+                                    // },
+                                    {
+                                        $project:
+                                            {
+                                                section_id: "$section_id",
+                                                subject_id: "$subjectId",
+                                                subject: "$subject_doc.name",
+                                                assignment_id: "$assignment_id",
+                                                assignment_title: "$assignment_title",
+                                                chapter_name: "$chapters_doc.title",
+                                                due_date: "$due_date",
+                                                description: "$description"
+                                            }
+                                    }
+                                ]).toArray(function (err, results) {
+                                    count++;
+                                    if (err) {
+                                        next(err, null);
+                                    }
+                                    subjectData.assignments = results;
+
+                                    if (subjectsResultLength == count) {
+
+                                        next(null, studentResult, result);
+                                        // next(null, classData);
+                                    }
+
+                                })
+                            })
+                        }
+                    },
+                    function getSectionSubjectsData(studentResult, result, next) {
+                        //   console.log(studentResult);
+                        //   console.log(result);
+                        var count = 0;
+                        var studentName = studentResult[0].first_name;
+
+                        var subjectsResult = result;
+                        var subjectsResultLength = result.length;
+                        var subjects = [];
+                        var resultArray = [];
+                        if (subjectsResultLength == 0) {
+                            next(null, []);
+                        } else {
+                            //  console.log("In Second step sections")
+                            subjectsResult.forEach(function (subjectData) {
+                                var subject_id = subjectData.subject_id;
+                                var assign_date = assign_date;
+                                subjectName = subjectData.name;
+                                subjectAssignments = subjectData.assignments;
+                                var assignments = [];
+
+                                if (subjectAssignments.length > 0) {
+                                    for (i = 0; i < subjectAssignments.length; i++) {
+                                        assignment_title = subjectAssignments[i].assignment_title;
+                                        due_date = subjectAssignments[i].due_date;
+                                        assignment_id = subjectAssignments[i].assignment_id;
+                                        description = subjectAssignments[i].description;
+                                        assignments.push({ assignment_id: assignment_id, assignment_title: assignment_title, due_date: due_date, description: description })
+
+
+                                    }
+                                }
+                                subjects.push({ subjectName: subjectName, assignments: assignments });
+                                count++;
+
+
+                                if (count == subjectsResult.length) {
+                                    resultArray.push({student_id:student_id,studentName:studentName,subjects:subjects})
+
+                                    next(null, resultArray)
+                                }
+
+                            })
+                        }
+                    }
+                ],
+                function (err, result1) {
+
+                    db.close();
+                    if (err) {
+                        res.send({
+                            error: err
+                        });
+
+                    } else {
+
+                        res.send({
+                            student_assign: result1
+                        });
+
+                    }
+                }
+            );
+        });
+    });
+
 
 router.route('/assignment_edit/:assignment_id/:name/:value')
     .post(function (req, res, next) {
@@ -488,7 +657,7 @@ router.route('/bulk_upload_assignments/:section_id/:lession_id')
             } else {
                 exceltojson = xlstojson;
             }
-            console.log(req.file.path);
+            //  console.log(req.file.path);
             try {
                 exceltojson({
                     input: req.file.path,
@@ -499,7 +668,7 @@ router.route('/bulk_upload_assignments/:section_id/:lession_id')
                         return res.json({ error_code: 1, err_desc: err, data: null });
                     }
                     res.json({ data: result });
-                    console.log(result[0]);
+                    // console.log(result[0]);
                     var test = result;
                     var count = 0;
 

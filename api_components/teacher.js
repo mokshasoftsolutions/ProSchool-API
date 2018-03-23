@@ -507,4 +507,32 @@ router.route('/employeeId_by_teacherId/:teacher_id')
         });
     });
 
+router.route('/staff_by_category/:job_category/:school_id')
+    .get(function (req, res, next) {
+        var job_category = req.params.job_category;
+        var school_id = req.params.school_id;
+        var resultArray = [];
+        var cursor;
+        //  console.log(job_category);
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            //var cursor = db.collection('employee').find({ job_category: job_category, school_id: school_id });
+            if (job_category == "teaching") {
+                cursor = db.collection('teachers').find({ school_id: school_id });
+            } else if (job_category == "non-teaching") {
+                cursor = db.collection('nonTeacher').find({ school_id: school_id });
+            } else {
+                cursor = db.collection('adminstrative').find({ school_id: school_id });
+            }
+            cursor.forEach(function (doc, err) {
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({ employees: resultArray });
+            });
+        });
+    });
+
+
+
 module.exports = router;

@@ -398,6 +398,24 @@ router.route('/class_attendence_by_classId_for_android/:select_date/:class_id')
         });
     });
 
+
+router.route('/employee_attendence_by_schools_id/:school_id')
+    .get(function (req, res, next) {
+        var school_id = req.params.school_id;
+        var status = 1;
+        var resultArray = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            db.collection('schools').deleteMany({ school_id: school_id }, function (err, result) {
+                assert.equal(null, err);
+                if (err) {
+                    res.send('false');
+                }
+            });
+        });
+    });
+
+
 router.route('/student_tillDate_attendence/:student_id')
     .get(function (req, res, next) {
         var student_id = req.params.student_id;

@@ -25,6 +25,7 @@ adminModule.prototype.addAdmin = function (request) {
     var employee_id = request.employee_id;
     var joined_on = request.joined_on;
     // var students = {student_id : student_id};
+    // console.log(request);
     var item = {
         adminstrative_id: 'getauto',
         adminstrative_name: adminstrative_name,
@@ -42,7 +43,7 @@ adminModule.prototype.addAdmin = function (request) {
                     unique: true
                 }, function (err, result) {
                     collection.insertOne(item, function (err, result) {
-                        if (err) {
+                        if (err) { 
                             if (err.code == 11000) {
                                 // res.end('false');
                             }
